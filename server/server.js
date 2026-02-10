@@ -26,3 +26,8 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
+const { requireAuth } = require("./middleware/authMiddleware");
+
+app.get("/api/me", requireAuth, (req, res) => {
+  res.json({ message: "You are authenticated", userId: req.userId });
+});

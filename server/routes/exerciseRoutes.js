@@ -4,9 +4,14 @@ const {
   seedExercises,
 } = require("../controllers/exerciseController");
 
+const { requireAuth } = require("../middleware/authMiddleware");
+
 const router = express.Router();
 
-router.get("/", getExercises);
+// Protected: user must be logged in to see exercises
+router.get("/", requireAuth, getExercises);
+
+// Dev-only: seed exercises (can stay unprotected for now)
 router.post("/seed", seedExercises);
 
 module.exports = router;
