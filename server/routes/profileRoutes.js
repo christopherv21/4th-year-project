@@ -2,12 +2,12 @@ const express = require("express");
 const router = express.Router();
 
 const requireAuth = require("../middleware/authMiddleware");
-const { getExercises, seedExercises } = require("../controllers/exerciseController");
+const { getMyProfile, upsertMyProfile } = require("../controllers/profileController");
 
+// protect all routes below
 router.use(requireAuth);
 
-router.get("/", getExercises);
-router.post("/seed", seedExercises);
+router.get("/", getMyProfile);
+router.post("/", upsertMyProfile);
 
 module.exports = router;
-
