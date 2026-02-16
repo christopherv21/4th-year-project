@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import ExercisesList from "./components/ExercisesList";
 import EvaluationResults from "./components/EvaluationResults";
+import ProfileSetup from "./components/ProfileSetup";
 import { apiFetch } from "./api";
 
 function App() {
@@ -12,27 +13,29 @@ function App() {
 
   const [exercises, setExercises] = useState([]);
   const [loadingExercises, setLoadingExercises] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
+
+
+  // general UI error (mainly for exercises)
   const [error, setError] = useState("");
 
-  // Triggers EvaluationResults + Recommendations to refetch
+  // recommendation-specific error
+  const [recError, setRecError] = useState("");
+
+  // ✅ Profile state
+  const [profile, setProfile] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileMissing, setProfileMissing] = useState(false);
+
+  // Triggers EvaluationResults + recommendation refresh
   const [refreshKey, setRefreshKey] = useState(0);
   const refreshSummary = () => setRefreshKey((prev) => prev + 1);
 
-  // Recommendations
+  // Current recommendation event
   const [recommended, setRecommended] = useState([]);
   const [loadingRec, setLoadingRec] = useState(false);
-
-  const loadRecommendations = async () => {
-    try {
-      setLoadingRec(true);
-      const data = await apiFetch("/api/recommendations/today");
-      setRecommended(Array.isArray(data) ? data : []);
-    } catch (e) {
-      setRecommended([]);
-    } finally {
-      setLoadingRec(false);
-    }
-  };
+  const [currentRecId, setCurrentRecId] = useState("");
+  const [currentCondition, setCurrentCondition] = useState("");
 
   // Restore session on refresh
   useEffect(() => {
@@ -44,20 +47,17 @@ function App() {
     }
   }, []);
 
-  // Login
+  // ✅ Login
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
+    setRecError("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/auth/login", {
+      const data = await apiFetch("/api/auth/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ emailOrUsername, password }),
       });
-
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.message || "Login failed");
 
       setToken(data.token);
       setUser(data.user);
@@ -65,7 +65,7 @@ function App() {
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Login failed");
     }
   };
 
@@ -74,8 +74,15 @@ function App() {
     setToken("");
     setExercises([]);
     setRecommended([]);
+    setCurrentRecId("");
+    setCurrentCondition("");
     setError("");
+    setRecError("");
     setRefreshKey(0);
+
+    setProfile(null);
+    setProfileMissing(false);
+    setProfileLoading(false);
 
     setEmailOrUsername("");
     setPassword("");
@@ -84,7 +91,55 @@ function App() {
     localStorage.removeItem("user");
   };
 
-  // Fetch exercises when token changes
+  // ✅ Fetch profile (this is the key)
+  const fetchProfile = async () => {
+    if (!token) return;
+
+    setProfileLoading(true);
+    setProfileMissing(false);
+
+    try {
+      const res = await fetch("http://localhost:5000/api/profile", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.status === 404) {
+        setProfile(null);
+        setProfileMissing(true);
+        return;
+      }
+
+      if (!res.ok) {
+        // If your API returns a JSON error message
+        let data = {};
+        try {
+          data = await res.json();
+        } catch {}
+        setError(data.message || "Failed to load profile");
+        setProfile(null);
+        setProfileMissing(true);
+        return;
+      }
+
+      const data = await res.json();
+      setProfile(data.profile || data);
+      setProfileMissing(false);
+    } catch (err) {
+      setProfile(null);
+      setProfileMissing(true);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  // ✅ When token changes, fetch profile
+  useEffect(() => {
+    if (!token) return;
+    fetchProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
+
+  // ✅ Fetch exercises list
   useEffect(() => {
     const loadExercises = async () => {
       if (!token) return;
@@ -106,11 +161,45 @@ function App() {
     loadExercises();
   }, [token]);
 
-  // ✅ Load recommendations on login AND after feedback refreshKey changes
+  // ✅ Generate recommendation
+  const generateRecommendation = async (condition = "personalised") => {
+  try {
+    setLoadingRec(true);
+    setRecError("");
+
+    const rec = await apiFetch("/api/recommendations/generate", {
+      method: "POST",
+      body: JSON.stringify({ condition }),
+    });
+
+    setCurrentRecId(rec?._id || "");
+    setCurrentCondition(rec?.condition || condition);
+
+    const workoutExercises = rec?.workout?.exercises || [];
+    setRecommended(Array.isArray(workoutExercises) ? workoutExercises : []);
+  } catch (err) {
+    setRecommended([]);
+    setCurrentRecId("");
+    setCurrentCondition("");
+    setRecError(err.message || "Failed to generate recommendation");
+  } finally {
+    setLoadingRec(false);
+  }
+};
+
+  // ✅ Auto-generate ONLY if profile exists
   useEffect(() => {
-    if (!token) return;
-    loadRecommendations();
-  }, [token, refreshKey]);
+  if (!token) return;
+  if (profileMissing) return;
+  if (!profile) return;
+
+  // Only auto-generate after feedback refresh
+  if (refreshKey > 0) {
+    generateRecommendation(currentCondition || "personalised");
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [refreshKey]);
+
 
   // LOGIN SCREEN
   if (!user) {
@@ -171,32 +260,107 @@ function App() {
         </div>
       </header>
 
-      {/* ✅ Evaluation Results */}
-      <div style={{ marginTop: 20, marginBottom: 20 }}>
-        <EvaluationResults refreshKey={refreshKey} />
-      </div>
+      {/* ✅ If profile missing, show ProfileSetup instead of errors */}
+      {profileLoading ? (
+        <p>Loading profile...</p>
+      ) : profileMissing ? (
+        <ProfileSetup
+          token={token}
+          onSaved={async () => {
+            await fetchProfile();     // refresh profile state
+            refreshSummary();         // refresh evaluation + triggers auto-generate
+          }}
+        />
+      ) : (
+        <>
 
-      {/* ✅ Personalised Recommendations */}
-      <h2 style={{ marginTop: "2rem" }}>⭐ Personalised Recommendations</h2>
-      {loadingRec && <p>Loading recommendations...</p>}
-      {!loadingRec && recommended.length === 0 && (
-        <p>No recommendations yet — submit a few ratings first ✅</p>
+        {/* ✅ Profile summary bar */}
+    <div style={{ marginTop: 16, padding: 12, border: "1px solid #ddd" }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+    <div>
+      👤 <b>Profile:</b>{" "}
+      {profile?.fitnessLevel} | {profile?.goal} | {profile?.equipment} | {profile?.daysPerWeek} days/week
+    </div>
+
+    <button onClick={() => setEditingProfile((v) => !v)} style={{ padding: "6px 10px" }}>
+      {editingProfile ? "Close" : "Edit Profile"}
+    </button>
+    </div>
+
+  {editingProfile && (
+    <ProfileSetup
+      token={token}
+      mode="edit"
+      existingProfile={profile}
+      onSaved={async () => {
+        setEditingProfile(false);
+        await fetchProfile();   // refresh profile line
+        refreshSummary();       // refresh evaluation + rec
+      }}
+    />
+  )}
+</div>
+
+          {/* ✅ Evaluation Results */}
+          <div style={{ marginTop: 20, marginBottom: 20 }}>
+            <EvaluationResults refreshKey={refreshKey} />
+          </div>
+
+          {/* ✅ Recommendation */}
+          <h2 style={{ marginTop: "2rem" }}>
+            ⭐ Recommendation{" "}
+            {currentCondition ? (
+              <span style={{ fontSize: "0.9rem", fontWeight: "normal" }}>
+                (condition: <b>{currentCondition}</b>)
+              </span>
+            ) : null}
+          </h2>
+
+          <div style={{ marginBottom: 12 }}>
+  <button
+    onClick={() => generateRecommendation("baseline")}
+    style={{ padding: "8px 12px", marginRight: 8 }}
+  >
+    Generate baseline
+  </button>
+
+  <button
+    onClick={() => generateRecommendation("personalised")}
+    style={{ padding: "8px 12px" }}
+  >
+    Generate personalised
+  </button>
+  </div>
+
+
+          {loadingRec && <p>Generating recommendation...</p>}
+          {recError && <p style={{ color: "red" }}>{recError}</p>}
+
+          {!loadingRec && recommended.length === 0 && !recError && (
+            <p>No recommendation loaded yet — click “Generate next recommendation”.</p>
+          )}
+
+          {recommended.length > 0 && (
+            <ExercisesList
+              exercises={recommended}
+              recommendationId={currentRecId}
+              onFeedbackSaved={refreshSummary}
+            />
+          )}
+
+          {/* ✅ Full database list */}
+          <h2 style={{ marginTop: "2rem" }}>Exercises (from MongoDB)</h2>
+
+          {loadingExercises && <p>Loading exercises...</p>}
+          {error && <p style={{ color: "red" }}>{error}</p>}
+
+          {!loadingExercises && exercises.length === 0 && (
+            <p>No exercises found in the database (or you’re not authorised).</p>
+          )}
+
+          <ExercisesList exercises={exercises} onFeedbackSaved={refreshSummary} />
+        </>
       )}
-      {recommended.length > 0 && (
-        <ExercisesList exercises={recommended} onFeedbackSaved={refreshSummary} />
-      )}
-
-      {/* ✅ Full database list */}
-      <h2 style={{ marginTop: "2rem" }}>Exercises (from MongoDB)</h2>
-
-      {loadingExercises && <p>Loading exercises...</p>}
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
-      {!loadingExercises && exercises.length === 0 && (
-        <p>No exercises found in the database (or you’re not authorised).</p>
-      )}
-
-      <ExercisesList exercises={exercises} onFeedbackSaved={refreshSummary} />
     </div>
   );
 }

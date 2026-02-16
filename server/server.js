@@ -11,6 +11,8 @@ const profileRoutes = require("./routes/profileRoutes");
 const recommendationRoutes = require("./routes/recommendationRoutes");
 const workoutLogRoutes = require("./routes/workoutLogRoutes");
 const feedbackRoutes = require("./routes/feedbackRoutes");
+const evaluationRoutes = require("./routes/evaluationRoutes");
+
 
 
 
@@ -35,6 +37,9 @@ app.use("/api/profile", profileRoutes);      // GET /api/profile, POST /api/prof
 app.use("/api/recommendations", recommendationRoutes); // GET /api/recommendations/generate
 app.use("/api/workouts", workoutLogRoutes);
 app.use("/api/feedback", feedbackRoutes);
+app.use("/api/evaluation", evaluationRoutes);
+
+
 
 
 // Protected test route

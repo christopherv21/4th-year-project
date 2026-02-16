@@ -1,13 +1,13 @@
-const express = require("express");
-const router = express.Router();
+const router = require("express").Router();
 
+// ✅ Your middleware file is authMiddleware.js (from your folder)
 const requireAuth = require("../middleware/authMiddleware");
+
+// ✅ Make sure this file exists at: server/controllers/profileController.js
 const { getMyProfile, upsertMyProfile } = require("../controllers/profileController");
 
-// protect all routes below
-router.use(requireAuth);
-
-router.get("/", getMyProfile);
-router.post("/", upsertMyProfile);
+// Routes
+router.get("/", requireAuth, getMyProfile);
+router.post("/", requireAuth, upsertMyProfile);
 
 module.exports = router;

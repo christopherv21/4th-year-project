@@ -8,7 +8,8 @@ const {
 } = require("../controllers/recommendationController");
 
 // existing route(s)
-router.get("/generate", requireAuth, generateRecommendations);
+router.post("/generate", requireAuth, generateRecommendations);
+
 
 // ✅ new route
 router.get("/today", requireAuth, getTodayRecommendations);

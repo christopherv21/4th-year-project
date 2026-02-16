@@ -1,9 +1,7 @@
-const BASE_URL = "http://localhost:5000";
-
 export async function apiFetch(path, options = {}) {
   const token = localStorage.getItem("token");
 
-  const res = await fetch(`${BASE_URL}${path}`, {
+  const res = await fetch(`http://localhost:5000${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -12,18 +10,9 @@ export async function apiFetch(path, options = {}) {
     },
   });
 
-  // Read as text first so we don't crash if it's not JSON
   const text = await res.text();
-  let data = {};
-  try {
-    data = text ? JSON.parse(text) : {};
-  } catch {
-    data = { message: text };
-  }
+  const data = text ? JSON.parse(text) : {};
 
-  if (!res.ok) {
-    throw new Error(data.message || `Request failed (${res.status})`);
-  }
-
+  if (!res.ok) throw new Error(data.message || "Request failed");
   return data;
 }
