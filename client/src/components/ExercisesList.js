@@ -1,114 +1,59 @@
-import React, { useState } from "react";
-import { apiFetch } from "../api";
+import React from "react";
 
-export default function ExercisesList({ exercises, recommendationId, onFeedbackSaved }) {
-  const [feedback, setFeedback] = useState({}); // { [id]: { completed, rating, notes } }
-  const [savingId, setSavingId] = useState(null);
-
-  const setField = (id, field, value) => {
-    setFeedback((prev) => ({
-      ...prev,
-      [id]: { completed: false, rating: 5, notes: "", ...(prev[id] || {}), [field]: value },
-    }));
-  };
-
-  const submitFeedback = async (ex) => {
-    // If we are on the recommendation screen, we need recommendationId
-    if (recommendationId && !recommendationId.trim()) {
-      alert("Missing recommendationId — generate a recommendation first.");
-      return;
-    }
-
-    const id = ex.exerciseId || ex._id; // personalised uses exerciseId, full list uses _id
-    const fb = feedback[id] || { completed: false, rating: 5, notes: "" };
-
-    try {
-      setSavingId(id);
-
-      // ✅ If recommendationId exists, send recommendation-level feedback (new evaluation)
-      if (recommendationId) {
-        await apiFetch("/api/evaluation/feedback", {
-          method: "POST",
-          body: JSON.stringify({
-            recommendationId,
-            completed: fb.completed,
-            rating: Number(fb.rating),
-            notes: fb.notes,
-            // optional: keep exercise context too
-            exerciseId: id,
-            exerciseName: ex.name,
-          }),
-        });
-      } else {
-        // If no recommendationId, you can either disable feedback, or send old-style (optional)
-        alert("This list is the full DB list — generate a recommendation to submit evaluation feedback.");
-        return;
-      }
-
-      onFeedbackSaved?.();
-      alert("Feedback saved ✅");
-    } catch (err) {
-      console.error(err);
-      alert(err.message || "Failed to submit feedback");
-    } finally {
-      setSavingId(null);
-    }
-  };
+/**
+ * ExercisesList (display-only)
+ * - Just lists exercises (name, sets, reps, etc.)
+ * - NO logging, NO recommendationId, NO feedback submission
+ */
+export default function ExercisesList({ exercises = [] }) {
+  if (!Array.isArray(exercises) || exercises.length === 0) {
+    return <p>No exercises to show.</p>;
+  }
 
   return (
     <div>
-      {exercises.map((ex) => {
-        const id = ex.exerciseId || ex._id;
-        const fb = feedback[id] || { completed: false, rating: 5, notes: "" };
+      {exercises.map((ex, idx) => {
+        const id = ex.exerciseId || ex._id || idx;
+
+        // Support both shapes:
+        // 1) plain exercise objects { name, sets, reps, ... }
+        // 2) workout items { exerciseId, name, sets, reps, restSeconds, ... }
+        const name = ex.name || ex.exerciseName || "Exercise";
+        const sets = ex.sets ?? ex.prescribedSets;
+        const reps = ex.reps ?? ex.prescribedReps;
+        const restSeconds = ex.restSeconds ?? ex.rest ?? null;
 
         return (
           <div key={id} style={{ borderBottom: "1px solid #ddd", padding: "12px 0" }}>
-            <h3 style={{ margin: 0 }}>{ex.name}</h3>
+            <h3 style={{ margin: 0 }}>{name}</h3>
 
-            <label style={{ marginRight: 12 }}>
-              <input
-                type="checkbox"
-                checked={!!fb.completed}
-                onChange={(e) => setField(id, "completed", e.target.checked)}
-              />{" "}
-              Completed
-            </label>
-
-            <label>
-              Rating{" "}
-              <select
-                value={fb.rating}
-                onChange={(e) => setField(id, "rating", e.target.value)}
-                style={{ marginLeft: 6 }}
-              >
-                {[1, 2, 3, 4, 5].map((r) => (
-                  <option key={r} value={r}>
-                    {r}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <div style={{ marginTop: 8 }}>
-              <input
-                placeholder="Notes (optional)"
-                value={fb.notes}
-                onChange={(e) => setField(id, "notes", e.target.value)}
-                style={{ width: "100%", padding: 6 }}
-              />
+            <div style={{ marginTop: 6, fontSize: 14 }}>
+              {sets != null && (
+                <span style={{ marginRight: 12 }}>
+                  <b>Sets:</b> {sets}
+                </span>
+              )}
+              {reps != null && (
+                <span style={{ marginRight: 12 }}>
+                  <b>Reps:</b> {reps}
+                </span>
+              )}
+              {restSeconds != null && (
+                <span style={{ marginRight: 12 }}>
+                  <b>Rest:</b> {restSeconds}s
+                </span>
+              )}
             </div>
 
-            <button
-              onClick={() => submitFeedback(ex)}
-              disabled={savingId === id || !recommendationId}
-              style={{ marginTop: 8, padding: "6px 10px" }}
-            >
-              {savingId === id ? "Saving..." : "Submit Feedback ✅"}
-            </button>
-
-            {!recommendationId && (
+            {/* Optional extras if your exercise objects include them */}
+            {ex.muscleGroup && (
               <div style={{ fontSize: 12, color: "#666", marginTop: 6 }}>
-                Generate a recommendation above to submit evaluation feedback.
+                Muscle group: <b>{ex.muscleGroup}</b>
+              </div>
+            )}
+            {ex.equipment && (
+              <div style={{ fontSize: 12, color: "#666" }}>
+                Equipment: <b>{ex.equipment}</b>
               </div>
             )}
           </div>

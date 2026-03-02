@@ -10,8 +10,8 @@ const pickRandom = (arr, n) => [...arr].sort(() => 0.5 - Math.random()).slice(0,
  * RULE-BASED ALGORITHM (v1)
  * Inputs (profile):
  *  - fitnessLevel: beginner | intermediate | advanced
- *  - goal: strength | hypertrophy | endurance (you can extend)
- *  - equipment: e.g., "gym", "bodyweight", "dumbbells" (must match your Exercise schema values)
+ *  - goal: strength | hypertrophy | endurance
+ *  - equipment: e.g. "gym", "bodyweight", "dumbbells" (must match Exercise schema values)
  * Output:
  *  - { sets, reps, filteredExercises }
  */
@@ -23,7 +23,7 @@ function applyRuleBasedV1(profile, exercises) {
   switch (profile.fitnessLevel) {
     case "beginner":
       sets = 3;
-      reps = 15; // slightly higher reps for learning / tolerance
+      reps = 15;
       break;
     case "intermediate":
       sets = 4;
@@ -34,33 +34,27 @@ function applyRuleBasedV1(profile, exercises) {
       reps = 6;
       break;
     default:
-      // Safe default if data is missing/dirty
       sets = 3;
       reps = 10;
   }
 
   // ---------- RULE GROUP B: Goal -> adjust prescription ----------
-  // Keep changes small & interpretable (good for evaluation)
   if (profile.goal === "strength") {
-    reps = Math.max(4, reps - 3); // push toward lower rep range
-    sets = Math.min(6, sets + 1); // slightly more volume via sets
+    reps = Math.max(4, reps - 3);
+    sets = Math.min(6, sets + 1);
   } else if (profile.goal === "endurance") {
-    reps = reps + 5; // higher reps
-    sets = Math.max(2, sets - 1); // slightly fewer sets
+    reps = reps + 5;
+    sets = Math.max(2, sets - 1);
   } else if (profile.goal === "hypertrophy") {
-    // keep moderate range, minor adjustment
     reps = Math.min(12, Math.max(8, reps));
   }
 
   // ---------- RULE GROUP C: Equipment -> filter exercise pool ----------
   let filteredExercises = exercises;
 
-  // Only filter if profile.equipment exists AND your Exercise docs have an "equipment" field
   if (profile.equipment && typeof profile.equipment === "string") {
     const eq = profile.equipment.trim().toLowerCase();
 
-    // Example mapping: adjust to your DB values
-    // If your Exercise.equipment values are already like "bodyweight"/"gym"/"dumbbells", this works.
     filteredExercises = exercises.filter((ex) => {
       const exEq = (ex.equipment || "").toString().trim().toLowerCase();
       return exEq === eq;
@@ -76,37 +70,43 @@ function applyRuleBasedV1(profile, exercises) {
 /**
  * POST /api/recommendations/generate
  * Body: { "condition": "baseline" | "personalised" }
+ *
+ * ✅ FIXED: This now ALWAYS respects the condition sent from the UI button.
+ * ❌ No more auto-switching/alternation.
  */
-  const generateRecommendations = async (req, res) => {
+const generateRecommendations = async (req, res) => {
   try {
-  // Automatically alternate experiment condition
-  const lastRecommendation = await Recommendation
-  .findOne({ userId: req.userId })
-  .sort({ createdAt: -1 });
+    const requested = (req.body?.condition || "").toString().trim().toLowerCase();
 
-  const condition =
-  lastRecommendation?.condition === "baseline"
-    ? "personalised"
-    : "baseline";
+    // ✅ Strict validation (prevents silent switching)
+    if (requested !== "baseline" && requested !== "personalised") {
+      return res.status(400).json({
+        message: "Invalid condition. Use 'baseline' or 'personalised'.",
+      });
+    }
 
+    const condition = requested;
 
     // 1) Read user profile
     const profile = await Profile.findOne({ userId: req.userId }).lean();
     if (!profile) {
-      return res.status(404).json({ message: "Profile not found. Create /api/profile first." });
+      return res
+        .status(404)
+        .json({ message: "Profile not found. Create /api/profile first." });
     }
 
     // 2) Get exercises from DB
     const exercises = await Exercise.find().lean();
     if (!exercises.length) {
-      return res.status(400).json({ message: "No exercises found in database. Seed exercises first." });
+      return res
+        .status(400)
+        .json({ message: "No exercises found in database. Seed exercises first." });
     }
 
-    // 3) Baseline vs personalised (controlled experiment variable)
+    // 3) Baseline vs personalised
     let workout;
 
     if (condition === "baseline") {
-      // ✅ Baseline is intentionally non-personalised (fixed template)
       workout = {
         title: "Baseline Full Body Template",
         frequency: profile.daysPerWeek,
@@ -119,10 +119,7 @@ function applyRuleBasedV1(profile, exercises) {
         notes: "Non-personalised baseline",
       };
     } else {
-      // ✅ Personalised uses explicit rule blocks (v1)
       const { sets, reps, filteredExercises } = applyRuleBasedV1(profile, exercises);
-
-      // Select N exercises from the filtered pool
       const selected = pickRandom(filteredExercises, 5);
 
       workout = {
@@ -150,7 +147,7 @@ function applyRuleBasedV1(profile, exercises) {
     // 4) Save recommendation event (evaluation-ready record)
     const saved = await Recommendation.create({
       userId: req.userId,
-      condition: condition === "baseline" ? "baseline" : "personalised",
+      condition,
       algorithmVersion: "rule-based-v1",
       workout,
     });

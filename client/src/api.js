@@ -10,9 +10,22 @@ export async function apiFetch(path, options = {}) {
     },
   });
 
-  const text = await res.text();
-  const data = text ? JSON.parse(text) : {};
+  // safely parse JSON
+  let data = {};
+  try {
+    const text = await res.text();
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    data = {};
+  }
 
-  if (!res.ok) throw new Error(data.message || "Request failed");
+  // ✅ IMPORTANT: attach status code
+  if (!res.ok) {
+    const err = new Error(data.message || `Request failed (${res.status})`);
+    err.status = res.status;   // ⭐ THIS FIXES YOUR 409 HANDLING
+    err.data = data;
+    throw err;
+  }
+
   return data;
 }

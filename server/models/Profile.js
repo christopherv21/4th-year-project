@@ -31,7 +31,7 @@ const ProfileSchema = new mongoose.Schema(
 
     equipment: {
       type: String,
-      enum: ["gym", "home", "calisthenics", "mixed"],
+      enum: ["gym", "home", "calisthenics", "mixed", "bodyweight"],
       default: "mixed",
     },
 
