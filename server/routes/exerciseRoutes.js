@@ -1,13 +1,12 @@
 const express = require("express");
 const router = express.Router();
 
-const requireAuth = require("../middleware/authMiddleware");
-const { getExercises, seedExercises } = require("../controllers/exerciseController");
+const {
+  seedExercises,
+  getAllExercises,
+} = require("../controllers/exerciseController");
 
-router.use(requireAuth);
-
-router.get("/", getExercises);
 router.post("/seed", seedExercises);
+router.get("/", getAllExercises);
 
 module.exports = router;
-

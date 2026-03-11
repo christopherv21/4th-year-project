@@ -1,40 +1,57 @@
 const Exercise = require("../models/Exercise");
 
-// Get all exercises from MongoDB
-const getExercises = async (req, res) => {
-  try {
-    const exercises = await Exercise.find().sort({ name: 1 });
-    res.json(exercises);
-  } catch (err) {
-    console.error("Error fetching exercises:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
-// Seed some exercises into the DB (run once)
 const seedExercises = async (req, res) => {
   try {
-    const count = await Exercise.countDocuments();
+    const exercises = [
+      { name: "Barbell Squat", muscleGroup: "quadriceps", category: "compound", equipment: "gym" },
+      { name: "Leg Press", muscleGroup: "quadriceps", category: "compound", equipment: "gym" },
+      { name: "Romanian Deadlift", muscleGroup: "hamstrings", category: "posterior_chain", equipment: "gym" },
+      { name: "Leg Curl", muscleGroup: "hamstrings", category: "isolation", equipment: "gym" },
+      { name: "Leg Extension", muscleGroup: "quadriceps", category: "isolation", equipment: "gym" },
+      { name: "Standing Calf Raise", muscleGroup: "calves", category: "calves", equipment: "gym" },
 
-    if (count > 0) {
-      return res.json({ message: "Exercises already seeded" });
-    }
+      { name: "Goblet Squat", muscleGroup: "quadriceps", category: "compound", equipment: "dumbbells" },
+      { name: "Dumbbell Romanian Deadlift", muscleGroup: "hamstrings", category: "posterior_chain", equipment: "dumbbells" },
+      { name: "Walking Lunges", muscleGroup: "glutes", category: "unilateral", equipment: "dumbbells" },
+      { name: "Bulgarian Split Squat", muscleGroup: "quadriceps", category: "unilateral", equipment: "dumbbells" },
+      { name: "Dumbbell Calf Raise", muscleGroup: "calves", category: "calves", equipment: "dumbbells" },
 
-    const sampleExercises = [
-      { name: "Running (moderate)", kcalPerMinute: 10 },
-      { name: "Cycling (easy)", kcalPerMinute: 7 },
-      { name: "Push-ups", kcalPerMinute: 8 },
-      { name: "Pull-ups", kcalPerMinute: 9 },
-      { name: "Squats", kcalPerMinute: 6 },
+      { name: "Air Squat", muscleGroup: "quadriceps", category: "compound", equipment: "bodyweight" },
+      { name: "Glute Bridge", muscleGroup: "glutes", category: "posterior_chain", equipment: "bodyweight" },
+      { name: "Bodyweight Lunges", muscleGroup: "quadriceps", category: "unilateral", equipment: "bodyweight" },
+      { name: "Wall Sit", muscleGroup: "quadriceps", category: "isolation", equipment: "bodyweight" },
+      { name: "Bodyweight Calf Raise", muscleGroup: "calves", category: "calves", equipment: "bodyweight" },
     ];
 
-    await Exercise.insertMany(sampleExercises);
+    await Exercise.deleteMany({});
+    const inserted = await Exercise.insertMany(exercises);
 
-    res.json({ message: "Sample exercises seeded" });
-  } catch (err) {
-    console.error("Error seeding exercises:", err);
-    res.status(500).json({ message: "Server error" });
+    res.status(201).json({
+      message: "Lower-body exercises seeded successfully",
+      count: inserted.length,
+      exercises: inserted,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to seed exercises",
+      error: error.message,
+    });
   }
 };
 
-module.exports = { getExercises, seedExercises };
+const getAllExercises = async (req, res) => {
+  try {
+    const exercises = await Exercise.find().sort({ name: 1 });
+    res.status(200).json(exercises);
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to fetch exercises",
+      error: error.message,
+    });
+  }
+};
+
+module.exports = {
+  seedExercises,
+  getAllExercises,
+};

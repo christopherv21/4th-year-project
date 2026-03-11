@@ -1,32 +1,30 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const exerciseSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
+const exerciseSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+      unique: true,
+    },
+    muscleGroup: {
+      type: String,
+      enum: ["quadriceps", "hamstrings", "glutes", "calves"],
+      required: true,
+    },
+    category: {
+      type: String,
+      enum: ["compound", "posterior_chain", "unilateral", "isolation", "calves"],
+      required: true,
+    },
+    equipment: {
+      type: String,
+      enum: ["gym", "dumbbells", "bodyweight"],
+      required: true,
+    },
   },
+  { timestamps: true }
+);
 
-  kcalPerMinute: {
-    type: Number,
-    required: true,
-  },
-
-  // optional fields for recommendation filtering (v2 upgrade)
-  muscleGroup: {
-    type: String,
-    default: "general"
-  },
-
-  equipment: {
-    type: String,
-    default: "gym"
-  },
-
-  difficulty: {
-    type: String,
-    enum: ["beginner", "intermediate", "advanced"],
-    default: "beginner"
-  }
-});
-
-module.exports = mongoose.model('Exercise', exerciseSchema);
+module.exports = mongoose.model("Exercise", exerciseSchema);

@@ -3,15 +3,13 @@ const router = express.Router();
 
 const requireAuth = require("../middleware/authMiddleware");
 const {
-  generateRecommendations,
-  getTodayRecommendations, // ✅ add
+  generateBaselineWorkout,
+  generatePersonalisedWorkout,
+  getMyRecommendations,
 } = require("../controllers/recommendationController");
 
-// existing route(s)
-router.post("/generate", requireAuth, generateRecommendations);
-
-
-// ✅ new route
-router.get("/today", requireAuth, getTodayRecommendations);
+router.post("/baseline", requireAuth, generateBaselineWorkout);
+router.post("/personalised", requireAuth, generatePersonalisedWorkout);
+router.get("/", requireAuth, getMyRecommendations);
 
 module.exports = router;

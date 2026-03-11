@@ -10,49 +10,44 @@ const exerciseRoutes = require("./routes/exerciseRoutes");
 const profileRoutes = require("./routes/profileRoutes");
 const recommendationRoutes = require("./routes/recommendationRoutes");
 const workoutLogRoutes = require("./routes/workoutLogRoutes");
-const feedbackRoutes = require("./routes/feedbackRoutes");
-
-
-
-
-
-
-
-
-// Middleware
-const requireAuth = require("./middleware/authMiddleware");
 
 dotenv.config();
 
 const app = express();
 
-// Global Middleware
-app.use(cors());
+// Middleware
+app.use(
+  cors({
+    origin: [
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "http://localhost:3001",
+  "http://127.0.0.1:3001",
+],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+
 app.use(express.json());
 
 // Connect DB
 connectDB();
 
-// API Routes
-app.use("/api", authRoutes);                 // /api/auth/register, /api/auth/login (based on your authRoutes)
-app.use("/api/exercises", exerciseRoutes);   // GET /api/exercises, POST /api/exercises/seed
-app.use("/api/profile", profileRoutes);      // GET /api/profile, POST /api/profile
-app.use("/api/recommendations", recommendationRoutes); // GET /api/recommendations/generate
-app.use("/api/workouts", workoutLogRoutes);
-app.use("/api/feedback", feedbackRoutes);
+// Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/exercises", exerciseRoutes);
+app.use("/api/profile", profileRoutes);
+app.use("/api/recommendations", recommendationRoutes);
+app.use("/api/workout-logs", workoutLogRoutes);
 
-
-
-
-
-
-// Protected test route
-app.get("/api/me", requireAuth, (req, res) => {
-  res.json({ message: "You are authenticated", userId: req.userId });
+// Health check
+app.get("/", (req, res) => {
+  res.send("CV Fitness API is running...");
 });
 
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });

@@ -3,7 +3,11 @@ import ExercisesList from "./components/ExercisesList";
 import EvaluationResults from "./components/EvaluationResults";
 import ProfileSetup from "./components/ProfileSetup";
 import WorkoutHistory from "./components/WorkoutHistory";
+import WorkoutDashboard from "./components/WorkoutDashboard";
+import ProfileSnapshot from "./components/ProfileSnapshot";
+import RecentActivity from "./components/RecentActivity";
 import { apiFetch } from "./api";
+import "./App.css";
 
 function App() {
   const [emailOrUsername, setEmailOrUsername] = useState("");
@@ -15,51 +19,47 @@ function App() {
   const [exercises, setExercises] = useState([]);
   const [loadingExercises, setLoadingExercises] = useState(false);
 
-  // ✅ Pages / tabs
-  const [page, setPage] = useState("dashboard"); // "dashboard" | "history" | "profile"
+  const [page, setPage] = useState("dashboard");
 
-  // Profile state
   const [profile, setProfile] = useState(null);
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileMissing, setProfileMissing] = useState(false);
   const [editingProfile, setEditingProfile] = useState(false);
 
-  // Evaluation refresh (used for EvaluationResults + history refresh)
+  const [logs, setLogs] = useState([]);
+  const [loadingLogs, setLoadingLogs] = useState(false);
+
   const [refreshKey, setRefreshKey] = useState(0);
   const refreshSummary = () => setRefreshKey((prev) => prev + 1);
 
-  // Errors
   const [error, setError] = useState("");
   const [recError, setRecError] = useState("");
 
-  // Recommendation state
   const [recommendedRec, setRecommendedRec] = useState(null);
   const [recommendedExercises, setRecommendedExercises] = useState([]);
   const [loadingRec, setLoadingRec] = useState(false);
   const [currentCondition, setCurrentCondition] = useState("");
 
-  // Feedback state
   const [completed, setCompleted] = useState(false);
-  const [rating, setRating] = useState(5);
-  const [difficultyFeedback, setDifficultyFeedback] = useState("appropriate");
+  const [suitabilityRating, setSuitabilityRating] = useState(5);
+  const [structureRating, setStructureRating] = useState(5);
+  const [difficultyFeedback, setDifficultyFeedback] = useState("just_right");
   const [notes, setNotes] = useState("");
-  const [durationMinutes, setDurationMinutes] = useState("");
 
   const [submitMsg, setSubmitMsg] = useState("");
   const [submitErr, setSubmitErr] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // Restore session
   useEffect(() => {
     const savedUser = localStorage.getItem("user");
     const savedToken = localStorage.getItem("token");
+
     if (savedUser && savedToken) {
       setUser(JSON.parse(savedUser));
       setToken(savedToken);
     }
   }, []);
 
-  // Login
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
@@ -81,7 +81,6 @@ function App() {
     }
   };
 
-  // Logout
   const handleLogout = () => {
     setUser(null);
     setToken("");
@@ -91,6 +90,9 @@ function App() {
     setRecommendedExercises([]);
     setCurrentCondition("");
 
+    setLogs([]);
+    setLoadingLogs(false);
+
     setError("");
     setRecError("");
     setRefreshKey(0);
@@ -99,12 +101,11 @@ function App() {
     setProfileMissing(false);
     setProfileLoading(false);
 
-    // reset feedback UI
     setCompleted(false);
-    setRating(5);
-    setDifficultyFeedback("appropriate");
+    setSuitabilityRating(5);
+    setStructureRating(5);
+    setDifficultyFeedback("just_right");
     setNotes("");
-    setDurationMinutes("");
     setSubmitMsg("");
     setSubmitErr("");
     setSubmitting(false);
@@ -119,16 +120,18 @@ function App() {
     localStorage.removeItem("user");
   };
 
-  // Fetch profile
   const fetchProfile = async () => {
     if (!token) return;
 
     setProfileLoading(true);
     setProfileMissing(false);
+    setError("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/profile", {
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await fetch("http://localhost:5000/api/profile/me", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       if (res.status === 404) {
@@ -137,21 +140,19 @@ function App() {
         return;
       }
 
+      const data = await res.json();
+
       if (!res.ok) {
-        let data = {};
-        try {
-          data = await res.json();
-        } catch {}
         setError(data.message || "Failed to load profile");
         setProfile(null);
         setProfileMissing(true);
         return;
       }
 
-      const data = await res.json();
-      setProfile(data.profile || data);
+      setProfile(data);
       setProfileMissing(false);
-    } catch {
+    } catch (err) {
+      setError("Failed to load profile");
       setProfile(null);
       setProfileMissing(true);
     } finally {
@@ -159,14 +160,11 @@ function App() {
     }
   };
 
-  // On token -> load profile
   useEffect(() => {
     if (!token) return;
     fetchProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
-  // Fetch exercises
   useEffect(() => {
     const loadExercises = async () => {
       if (!token) return;
@@ -188,7 +186,25 @@ function App() {
     loadExercises();
   }, [token]);
 
-  // Generate recommendation
+  useEffect(() => {
+    const loadLogs = async () => {
+      if (!token) return;
+
+      setLoadingLogs(true);
+
+      try {
+        const data = await apiFetch("/api/workout-logs", { token });
+        setLogs(Array.isArray(data) ? data : []);
+      } catch (err) {
+        setLogs([]);
+      } finally {
+        setLoadingLogs(false);
+      }
+    };
+
+    loadLogs();
+  }, [token, refreshKey]);
+
   const generateRecommendation = async (condition = "personalised") => {
     try {
       setCurrentCondition(condition);
@@ -200,16 +216,18 @@ function App() {
       setRecommendedRec(null);
       setRecommendedExercises([]);
 
-      const rec = await apiFetch("/api/recommendations/generate", {
+      const endpoint =
+        condition === "baseline"
+          ? "/api/recommendations/baseline"
+          : "/api/recommendations/personalised";
+
+      const rec = await apiFetch(endpoint, {
         method: "POST",
-        body: JSON.stringify({ condition }),
         token,
       });
 
       setRecommendedRec(rec);
-
-      const workoutExercises = rec?.workout?.exercises || [];
-      setRecommendedExercises(Array.isArray(workoutExercises) ? workoutExercises : []);
+      setRecommendedExercises(Array.isArray(rec?.exercises) ? rec.exercises : []);
     } catch (err) {
       setRecommendedRec(null);
       setRecommendedExercises([]);
@@ -219,20 +237,18 @@ function App() {
     }
   };
 
-  // Reset feedback for new recommendation
   useEffect(() => {
     if (!recommendedRec?._id) return;
 
     setCompleted(false);
-    setRating(5);
-    setDifficultyFeedback("appropriate");
+    setSuitabilityRating(5);
+    setStructureRating(5);
+    setDifficultyFeedback("just_right");
     setNotes("");
-    setDurationMinutes("");
     setSubmitMsg("");
     setSubmitErr("");
   }, [recommendedRec?._id]);
 
-  // Submit feedback
   const submitFeedback = async () => {
     setSubmitMsg("");
     setSubmitErr("");
@@ -243,167 +259,166 @@ function App() {
     }
 
     setSubmitting(true);
+
     try {
-      await apiFetch("/api/workouts/log", {
+      await apiFetch("/api/workout-logs", {
         method: "POST",
         body: JSON.stringify({
           recommendationId: recommendedRec._id,
           completed,
-          rating: Number(rating),
+          suitabilityRating: Number(suitabilityRating),
+          structureRating: Number(structureRating),
           difficultyFeedback,
           notes,
-          durationMinutes:
-            durationMinutes === "" || durationMinutes === null
-              ? undefined
-              : Number(durationMinutes),
         }),
         token,
       });
 
-      setSubmitMsg("Feedback saved ✅");
+      setSubmitMsg("Feedback saved successfully.");
       refreshSummary();
-
-      // ✅ Keep user on dashboard (EvaluationResults updates there)
       setPage("dashboard");
     } catch (err) {
-      const status = err?.status;
-      const msg = err?.message || "Failed to submit feedback.";
-
-      if (status === 409 || msg.toLowerCase().includes("already")) {
-        setSubmitErr("You already submitted feedback for this recommendation (409).");
-      } else {
-        setSubmitErr(msg);
-      }
+      setSubmitErr(err.message || "Failed to submit feedback.");
     } finally {
       setSubmitting(false);
     }
   };
 
-  // LOGIN SCREEN
+  const latestLog =
+    Array.isArray(logs) && logs.length > 0
+      ? [...logs].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0]
+      : null;
+
   if (!user) {
     return (
-      <div style={{ maxWidth: "420px", margin: "40px auto", fontFamily: "sans-serif" }}>
-        <h1>Personalised Gym Workout System</h1>
-        <h2>Login</h2>
+      <div className="login-shell">
+        <h1 className="login-title">Personalised Gym Workout System</h1>
+        <p className="subtle-text">Log in to generate and evaluate lower-body workouts.</p>
 
-        <form onSubmit={handleLogin}>
-          <div style={{ marginBottom: "1rem" }}>
-            <label>
-              Email or Username:
-              <input
-                type="text"
-                value={emailOrUsername}
-                onChange={(e) => setEmailOrUsername(e.target.value)}
-                style={{ display: "block", width: "100%", padding: "8px", marginTop: "4px" }}
-              />
-            </label>
+        <form onSubmit={handleLogin} className="form-grid" style={{ marginTop: 20 }}>
+          <div className="form-group">
+            <label>Email or Username</label>
+            <input
+              type="text"
+              value={emailOrUsername}
+              onChange={(e) => setEmailOrUsername(e.target.value)}
+            />
           </div>
 
-          <div style={{ marginBottom: "1rem" }}>
-            <label>
-              Password:
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                style={{ display: "block", width: "100%", padding: "8px", marginTop: "4px" }}
-              />
-            </label>
+          <div className="form-group">
+            <label>Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
           </div>
 
-          <button type="submit" style={{ padding: "8px 16px" }}>
+          <button type="submit" className="primary-btn">
             Login
           </button>
         </form>
 
-        {error && <p style={{ color: "red" }}>{error}</p>}
+        {error && (
+          <p className="status-error" style={{ marginTop: 14 }}>
+            {error}
+          </p>
+        )}
 
-        <p style={{ marginTop: "1rem", fontSize: "0.9rem" }}>
-          Use an account you created via Thunder Client (register endpoint).
+        <p className="subtle-text" style={{ marginTop: 18 }}>
+          Use an account created through Thunder Client or your register endpoint.
         </p>
       </div>
     );
   }
 
-  // Shared styles
-  const tabStyle = (active) => ({
-    padding: "6px 10px",
-    marginRight: 8,
-    fontWeight: active ? "bold" : "normal",
-    border: active ? "2px solid #000" : "1px solid #ddd",
-    cursor: "pointer",
-    background: "white",
-  });
-
-  const activeBtnStyle = {
-    border: "2px solid #000",
-    fontWeight: "bold",
-  };
-
-  // MAIN SCREEN
   return (
-    <div style={{ maxWidth: "900px", margin: "40px auto", fontFamily: "sans-serif" }}>
-      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+    <div className="app-shell">
+      <header className="app-header">
         <div>
-          <h1 style={{ margin: 0 }}>Personalised Gym Workout System</h1>
+          <h1 className="app-title">Personalised Gym Workout System</h1>
 
-          <div style={{ marginTop: 10 }}>
-            <button type="button" onClick={() => setPage("dashboard")} style={tabStyle(page === "dashboard")}>
+          <div className="nav-tabs">
+            <button
+              type="button"
+              onClick={() => setPage("dashboard")}
+              className={`tab-btn ${page === "dashboard" ? "active" : ""}`}
+            >
               Dashboard
             </button>
 
-            <button type="button" onClick={() => setPage("history")} style={tabStyle(page === "history")}>
+            <button
+              type="button"
+              onClick={() => setPage("history")}
+              className={`tab-btn ${page === "history" ? "active" : ""}`}
+            >
               Workout History
             </button>
 
-            <button type="button" onClick={() => setPage("profile")} style={tabStyle(page === "profile")}>
+            <button
+              type="button"
+              onClick={() => setPage("profile")}
+              className={`tab-btn ${page === "profile" ? "active" : ""}`}
+            >
               Workout Profile
             </button>
           </div>
         </div>
 
-        <div>
-          <span style={{ marginRight: "1rem" }}>👤 {user.username}</span>
-          <button onClick={handleLogout} style={{ padding: "6px 12px" }}>
+        <div className="top-right">
+          <span className="user-chip">👤 {user.username}</span>
+          <button onClick={handleLogout} className="logout-btn">
             Logout
           </button>
         </div>
       </header>
 
-      {/* PROFILE LOADING / MISSING */}
       {profileLoading ? (
-        <p>Loading profile...</p>
+        <div className="page-card">
+          <p>Loading profile...</p>
+        </div>
       ) : profileMissing ? (
-        <ProfileSetup
-          token={token}
-          onSaved={async () => {
-            await fetchProfile();
-            refreshSummary();
-            setPage("profile");
-            setEditingProfile(true);
-          }}
-        />
+        <div className="page-card">
+          <ProfileSetup
+            token={token}
+            onSaved={async () => {
+              await fetchProfile();
+              refreshSummary();
+              setPage("profile");
+              setEditingProfile(true);
+            }}
+          />
+        </div>
       ) : page === "history" ? (
-        // ✅ HISTORY PAGE (NO EvaluationResults here)
-        <div style={{ marginTop: 20 }}>
+        <div className="page-card">
           <WorkoutHistory refreshKey={refreshKey} token={token} />
         </div>
       ) : page === "profile" ? (
-        // ✅ PROFILE PAGE
-        <div style={{ marginTop: 16, padding: 12, border: "1px solid #ddd" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div className="page-card">
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 12,
+              flexWrap: "wrap",
+            }}
+          >
             <div>
-              👤 <b>Profile:</b> {profile?.fitnessLevel} | {profile?.goal} | {profile?.equipment} |{" "}
-              {profile?.daysPerWeek} days/week
+              👤 <b>Profile:</b> {profile?.fitnessLevel} | {profile?.goal} |{" "}
+              {profile?.equipment}
             </div>
 
-            <button onClick={() => setEditingProfile((v) => !v)} style={{ padding: "6px 10px" }}>
+            <button
+              onClick={() => setEditingProfile((v) => !v)}
+              className="secondary-btn"
+            >
               {editingProfile ? "Close" : "Edit Profile"}
             </button>
           </div>
 
           {editingProfile ? (
-            <div style={{ marginTop: 12 }}>
+            <div style={{ marginTop: 16 }}>
               <ProfileSetup
                 token={token}
                 mode="edit"
@@ -416,155 +431,180 @@ function App() {
               />
             </div>
           ) : (
-            <p style={{ marginTop: 12, color: "#444" }}>
-              Tip: Click <b>Edit Profile</b> to update your preferences.
+            <p className="subtle-text" style={{ marginTop: 14 }}>
+              Tip: Click <b>Edit Profile</b> to update your workout preferences.
             </p>
           )}
         </div>
       ) : (
-        // ✅ DASHBOARD PAGE (EvaluationResults only here)
         <>
-          <div style={{ marginTop: 20, marginBottom: 20 }}>
+          <WorkoutDashboard
+            workout={recommendedRec}
+            latestLog={latestLog}
+            onGenerateBaseline={() => generateRecommendation("baseline")}
+            onGeneratePersonalised={() => generateRecommendation("personalised")}
+          />
+
+          <div className="dashboard-two-col">
+            <ProfileSnapshot profile={profile} />
+            <RecentActivity latestLog={latestLog} />
+          </div>
+
+          <div className="page-card">
             <EvaluationResults refreshKey={refreshKey} token={token} />
           </div>
 
-          {/* Recommendation */}
-          <h2 style={{ marginTop: "2rem" }}>
-            ⭐ Recommendation{" "}
-            {currentCondition ? (
-              <span style={{ fontSize: "0.9rem", fontWeight: "normal" }}>
-                (condition: <b>{currentCondition}</b>)
-              </span>
-            ) : null}
-          </h2>
+          <div className="page-card">
+            <h2 className="section-title">
+              Workout Generator{" "}
+              {currentCondition ? (
+                <span style={{ fontSize: "1rem", fontWeight: 500 }}>
+                  (type: <b>{currentCondition}</b>)
+                </span>
+              ) : null}
+            </h2>
 
-          <div style={{ marginBottom: 12 }}>
-            <button
-              type="button"
-              disabled={loadingRec}
-              aria-pressed={currentCondition === "baseline"}
-              onClick={() => generateRecommendation("baseline")}
-              style={{
-                padding: "8px 12px",
-                marginRight: 8,
-                ...(currentCondition === "baseline" ? activeBtnStyle : null),
-                opacity: loadingRec ? 0.6 : 1,
-                cursor: loadingRec ? "not-allowed" : "pointer",
-              }}
-            >
-              {loadingRec && currentCondition === "baseline" ? "Generating..." : "Generate baseline"}
-            </button>
+            <div className="action-row">
+              <button
+                type="button"
+                disabled={loadingRec}
+                aria-pressed={currentCondition === "baseline"}
+                onClick={() => generateRecommendation("baseline")}
+                className={`action-btn ${currentCondition === "baseline" ? "active" : ""}`}
+              >
+                {loadingRec && currentCondition === "baseline"
+                  ? "Generating..."
+                  : "Generate Baseline Workout"}
+              </button>
 
-            <button
-              type="button"
-              disabled={loadingRec}
-              aria-pressed={currentCondition === "personalised"}
-              onClick={() => generateRecommendation("personalised")}
-              style={{
-                padding: "8px 12px",
-                ...(currentCondition === "personalised" ? activeBtnStyle : null),
-                opacity: loadingRec ? 0.6 : 1,
-                cursor: loadingRec ? "not-allowed" : "pointer",
-              }}
-            >
-              {loadingRec && currentCondition === "personalised"
-                ? "Generating..."
-                : "Generate personalised"}
-            </button>
+              <button
+                type="button"
+                disabled={loadingRec}
+                aria-pressed={currentCondition === "personalised"}
+                onClick={() => generateRecommendation("personalised")}
+                className={`action-btn ${currentCondition === "personalised" ? "active" : ""}`}
+              >
+                {loadingRec && currentCondition === "personalised"
+                  ? "Generating..."
+                  : "Generate Personalised Workout"}
+              </button>
+            </div>
+
+            {loadingRec && <p>Generating recommendation...</p>}
+            {recError && <p className="status-error">{recError}</p>}
+
+            {!loadingRec && recommendedExercises.length === 0 && !recError && (
+              <div className="empty-state">
+                No recommendation loaded yet — click one of the buttons above.
+              </div>
+            )}
+
+            {recommendedExercises.length > 0 && (
+              <>
+                <div className="workout-box">
+                  <h3 style={{ textTransform: "capitalize", marginTop: 0 }}>
+                    {recommendedRec?.workoutType} Lower-Body Workout
+                  </h3>
+
+                  <ExercisesList exercises={recommendedExercises} />
+                </div>
+
+                <div className="page-card" style={{ marginTop: 18, marginBottom: 0 }}>
+                  <h3 style={{ marginTop: 0 }}>Workout Feedback</h3>
+
+                  <div className="feedback-grid">
+                    <label className="inline-field">
+                      <span>
+                        <b>Completed:</b>
+                      </span>
+                      <input
+                        type="checkbox"
+                        checked={completed}
+                        onChange={(e) => setCompleted(e.target.checked)}
+                      />
+                    </label>
+
+                    <label className="inline-field">
+                      <span>
+                        <b>Suitability Rating (1–5):</b>
+                      </span>
+                      <input
+                        type="number"
+                        min={1}
+                        max={5}
+                        value={suitabilityRating}
+                        onChange={(e) => setSuitabilityRating(Number(e.target.value))}
+                      />
+                    </label>
+
+                    <label className="inline-field">
+                      <span>
+                        <b>Structure Rating (1–5):</b>
+                      </span>
+                      <input
+                        type="number"
+                        min={1}
+                        max={5}
+                        value={structureRating}
+                        onChange={(e) => setStructureRating(Number(e.target.value))}
+                      />
+                    </label>
+
+                    <label className="inline-field">
+                      <span>
+                        <b>Difficulty:</b>
+                      </span>
+                      <select
+                        value={difficultyFeedback}
+                        onChange={(e) => setDifficultyFeedback(e.target.value)}
+                      >
+                        <option value="too_easy">Too Easy</option>
+                        <option value="just_right">Just Right</option>
+                        <option value="too_hard">Too Hard</option>
+                      </select>
+                    </label>
+
+                    <div className="form-group">
+                      <label>Notes</label>
+                      <textarea
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        rows={4}
+                      />
+                    </div>
+                  </div>
+
+                  <button onClick={submitFeedback} disabled={submitting} className="primary-btn">
+                    {submitting ? "Saving..." : "Submit Feedback"}
+                  </button>
+
+                  {submitMsg && (
+                    <p className="status-success" style={{ marginTop: 14 }}>
+                      {submitMsg}
+                    </p>
+                  )}
+                  {submitErr && (
+                    <p className="status-error" style={{ marginTop: 14 }}>
+                      {submitErr}
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
           </div>
 
-          {loadingRec && <p>Generating recommendation...</p>}
-          {recError && <p style={{ color: "red" }}>{recError}</p>}
+          <div className="page-card">
+            <h2 className="section-title">Exercise Database</h2>
 
-          {!loadingRec && recommendedExercises.length === 0 && !recError && (
-            <p>No recommendation loaded yet — click “Generate baseline/personalised”.</p>
-          )}
+            {loadingExercises && <p>Loading exercises...</p>}
+            {error && <p className="status-error">{error}</p>}
 
-          {recommendedExercises.length > 0 && (
-            <>
-              <ExercisesList exercises={recommendedExercises} />
+            {!loadingExercises && exercises.length === 0 && (
+              <div className="empty-state">No exercises found in the database.</div>
+            )}
 
-              {/* ONE feedback form per recommendation */}
-              <div style={{ marginTop: 16, padding: 12, border: "1px solid #ddd" }}>
-                <h3>Workout Feedback</h3>
-
-                <label style={{ display: "block", marginBottom: 8 }}>
-                  Completed:
-                  <input
-                    type="checkbox"
-                    checked={completed}
-                    onChange={(e) => setCompleted(e.target.checked)}
-                    style={{ marginLeft: 8 }}
-                  />
-                </label>
-
-                <label style={{ display: "block", marginBottom: 8 }}>
-                  Rating (1–5):
-                  <input
-                    type="number"
-                    min={1}
-                    max={5}
-                    value={rating}
-                    onChange={(e) => setRating(Number(e.target.value))}
-                    style={{ marginLeft: 8, width: 60 }}
-                  />
-                </label>
-
-                <label style={{ display: "block", marginBottom: 8 }}>
-                  Difficulty:
-                  <select
-                    value={difficultyFeedback}
-                    onChange={(e) => setDifficultyFeedback(e.target.value)}
-                    style={{ marginLeft: 8 }}
-                  >
-                    <option value="easy">easy</option>
-                    <option value="appropriate">appropriate</option>
-                    <option value="hard">hard</option>
-                  </select>
-                </label>
-
-                <label style={{ display: "block", marginBottom: 8 }}>
-                  Duration (minutes):
-                  <input
-                    type="number"
-                    min={0}
-                    value={durationMinutes}
-                    onChange={(e) => setDurationMinutes(e.target.value)}
-                    style={{ marginLeft: 8, width: 80 }}
-                  />
-                </label>
-
-                <label style={{ display: "block", marginBottom: 8 }}>
-                  Notes:
-                  <textarea
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    rows={3}
-                    style={{ display: "block", width: "100%", marginTop: 6 }}
-                  />
-                </label>
-
-                <button onClick={submitFeedback} disabled={submitting} style={{ padding: "8px 12px" }}>
-                  {submitting ? "Saving..." : "Submit Feedback"}
-                </button>
-
-                {submitMsg && <p style={{ color: "green" }}>{submitMsg}</p>}
-                {submitErr && <p style={{ color: "red" }}>{submitErr}</p>}
-              </div>
-            </>
-          )}
-
-          {/* Full database list */}
-          <h2 style={{ marginTop: "2rem" }}>Exercises</h2>
-
-          {loadingExercises && <p>Loading exercises...</p>}
-          {error && <p style={{ color: "red" }}>{error}</p>}
-
-          {!loadingExercises && exercises.length === 0 && (
-            <p>No exercises found in the database (or you’re not authorised).</p>
-          )}
-
-          <ExercisesList exercises={exercises} />
+            <ExercisesList exercises={exercises} />
+          </div>
         </>
       )}
     </div>

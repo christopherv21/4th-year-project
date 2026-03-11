@@ -1,168 +1,167 @@
 import React, { useEffect, useState } from "react";
+import axios from "axios";
 
-const API_BASE = "http://localhost:5000";
+const defaultProfile = {
+  fitnessLevel: "beginner",
+  goal: "hypertrophy",
+  equipment: "gym",
+};
 
-export default function ProfileSetup({
-  token,
-  onSaved,
-  mode = "create",
-  existingProfile = null,
-}) {
-  const [fitnessLevel, setFitnessLevel] = useState("beginner");
-  const [goal, setGoal] = useState("strength");
-  const [equipment, setEquipment] = useState("gym");
-  const [daysPerWeek, setDaysPerWeek] = useState(3);
-  const [muscleGroup, setMuscleGroup] = useState("");
-
+function ProfileSetup({ token: tokenProp, mode = "create", existingProfile = null, onSaved }) {
+  const [formData, setFormData] = useState(defaultProfile);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [msg, setMsg] = useState("");
 
-  // ✅ Prefill form when editing
+  const token = tokenProp || localStorage.getItem("token");
+
   useEffect(() => {
-    if (!existingProfile) return;
-
-    if (existingProfile.fitnessLevel) setFitnessLevel(existingProfile.fitnessLevel);
-    if (existingProfile.goal) setGoal(existingProfile.goal);
-    if (existingProfile.equipment) setEquipment(existingProfile.equipment);
-    if (typeof existingProfile.daysPerWeek === "number") setDaysPerWeek(existingProfile.daysPerWeek);
-    if (existingProfile.muscleGroup) setMuscleGroup(existingProfile.muscleGroup);
-  }, [existingProfile]);
-
-  const saveProfile = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setMsg("");
-
-    if (!token) {
-      setMsg("❌ Missing token (please log in again).");
-      setLoading(false);
+    if (existingProfile) {
+      setFormData({
+        fitnessLevel: existingProfile.fitnessLevel || "beginner",
+        goal: existingProfile.goal || "hypertrophy",
+        equipment: existingProfile.equipment || "gym",
+      });
       return;
     }
 
+    const fetchProfile = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/api/profile/me", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (res.data) {
+          setFormData({
+            fitnessLevel: res.data.fitnessLevel || "beginner",
+            goal: res.data.goal || "hypertrophy",
+            equipment: res.data.equipment || "gym",
+          });
+        }
+      } catch (err) {
+        // No profile yet is fine
+      }
+    };
+
+    if (token) {
+      fetchProfile();
+    }
+  }, [token, existingProfile]);
+
+  const handleChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage("");
+    setError("");
+
     try {
-      const payload = {
-        fitnessLevel,
-        goal,
-        equipment,
-        daysPerWeek,
-        ...(muscleGroup ? { muscleGroup } : {}),
+      const res = await axios.post("http://localhost:5000/api/profile", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const savedProfile = {
+        fitnessLevel: res.data.fitnessLevel,
+        goal: res.data.goal,
+        equipment: res.data.equipment,
       };
 
-      // 1) Save profile (UPSERT)
-      const res = await fetch(`${API_BASE}/api/profile`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
+      setFormData(savedProfile);
+      setMessage("Profile saved successfully.");
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        console.error("Profile save failed:", res.status, data);
-        setMsg(data.message || "Failed to save profile");
-        setLoading(false);
-        return;
+      if (onSaved) {
+        onSaved(savedProfile);
       }
-
-      // 2) Auto-generate recommendation immediately after profile save
-      const recRes = await fetch(`${API_BASE}/api/recommendations/generate`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ condition: "personalised" }),
-      });
-
-      const recData = await recRes.json();
-
-      if (!recRes.ok) {
-        console.error("Recommendation generate failed:", recRes.status, recData);
-        setMsg("✅ Profile saved, but recommendation failed to generate.");
-        setLoading(false);
-        onSaved?.(null); // still allow parent to refresh profile UI
-        return;
-      }
-
-      setMsg("✅ Profile saved + workout generated!");
-      setLoading(false);
-
-      // Pass the new recommendation up (parent can refresh UI or display it)
-      onSaved?.(recData);
-
     } catch (err) {
-      console.error("Network/server error:", err);
-      setMsg("Server error saving profile");
+      setError(err.response?.data?.message || "Failed to save profile.");
+    } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ border: "1px solid #ddd", padding: 16, marginTop: 16 }}>
-      <h2>🧍 {mode === "edit" ? "Edit Profile" : "Profile Setup"}</h2>
+    <div className="profile-setup-shell">
+      <h2 className="section-title" style={{ marginBottom: 8 }}>
+        {mode === "edit" ? "Edit Profile" : "Profile Setup"}
+      </h2>
 
-      <p style={{ marginTop: 0 }}>
-        Set your preferences so the system can generate personalised workouts.
+      <p className="subtle-text" style={{ marginTop: 0, marginBottom: 20 }}>
+        Set your preferences for personalised lower-body workouts.
       </p>
 
-      <form onSubmit={saveProfile} style={{ display: "grid", gap: 12, maxWidth: 420 }}>
-        <label>
-          Fitness level
-          <select value={fitnessLevel} onChange={(e) => setFitnessLevel(e.target.value)}>
+      <form onSubmit={handleSubmit} className="form-grid">
+        <div className="form-group">
+          <label htmlFor="fitnessLevel">Fitness Level</label>
+          <select
+            id="fitnessLevel"
+            name="fitnessLevel"
+            value={formData.fitnessLevel}
+            onChange={handleChange}
+          >
             <option value="beginner">Beginner</option>
             <option value="intermediate">Intermediate</option>
             <option value="advanced">Advanced</option>
           </select>
-        </label>
+        </div>
 
-        <label>
-          Goal
-          <select value={goal} onChange={(e) => setGoal(e.target.value)}>
+        <div className="form-group">
+          <label htmlFor="goal">Goal</label>
+          <select
+            id="goal"
+            name="goal"
+            value={formData.goal}
+            onChange={handleChange}
+          >
             <option value="strength">Strength</option>
             <option value="hypertrophy">Hypertrophy</option>
             <option value="endurance">Endurance</option>
           </select>
-        </label>
+        </div>
 
-        <label>
-          Equipment
-          <select value={equipment} onChange={(e) => setEquipment(e.target.value)}>
+        <div className="form-group">
+          <label htmlFor="equipment">Equipment</label>
+          <select
+            id="equipment"
+            name="equipment"
+            value={formData.equipment}
+            onChange={handleChange}
+          >
             <option value="gym">Gym</option>
-            <option value="home">Home</option>
+            <option value="dumbbells">Dumbbells</option>
             <option value="bodyweight">Bodyweight</option>
           </select>
-        </label>
+        </div>
 
-        <label>
-          Days per week
-          <select value={daysPerWeek} onChange={(e) => setDaysPerWeek(Number(e.target.value))}>
-            {[1, 2, 3, 4, 5, 6, 7].map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label>
-          Muscle group (later)
-          <input
-            value={muscleGroup}
-            onChange={(e) => setMuscleGroup(e.target.value)}
-            placeholder="e.g., legs, push, pull"
-            disabled
-          />
-        </label>
-
-        <button type="submit" disabled={loading}>
-          {loading ? "Saving..." : mode === "edit" ? "Update Profile" : "Save Profile"}
-        </button>
-
-        {msg && <div style={{ color: msg.startsWith("✅") ? "green" : "crimson" }}>{msg}</div>}
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 6 }}>
+          <button type="submit" disabled={loading} className="primary-btn">
+            {loading ? "Saving..." : "Save Profile"}
+          </button>
+        </div>
       </form>
+
+      {message && (
+        <p className="status-success" style={{ marginTop: 14 }}>
+          {message}
+        </p>
+      )}
+
+      {error && (
+        <p className="status-error" style={{ marginTop: 14 }}>
+          {error}
+        </p>
+      )}
     </div>
   );
 }
+
+export default ProfileSetup;

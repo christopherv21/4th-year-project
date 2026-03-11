@@ -1,66 +1,42 @@
 const mongoose = require("mongoose");
 
-const WorkoutLogSchema = new mongoose.Schema(
+const workoutLogSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      index: true,
     },
-
-    // ✅ Link to Recommendation (NOT Exercise)
     recommendationId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Recommendation",
       required: true,
-      index: true,
     },
-
-    // ✅ Experimental condition stored directly on log
-    // (makes history + metrics simpler and faster)
-    condition: {
-      type: String,
-      enum: ["personalised", "baseline"],
-      index: true,
-    },
-
-    // ✅ Workout completion (H1)
     completed: {
       type: Boolean,
-      default: false,
+      required: true,
     },
-
-    // ✅ Suitability rating (H2)
-    rating: {
+    suitabilityRating: {
       type: Number,
       min: 1,
       max: 5,
     },
-
-    // ✅ Difficulty match feedback (H3)
+    structureRating: {
+      type: Number,
+      min: 1,
+      max: 5,
+    },
     difficultyFeedback: {
       type: String,
-      enum: ["easy", "appropriate", "hard"],
+      enum: ["too_easy", "just_right", "too_hard"],
     },
-
-    // Optional user comments
     notes: {
       type: String,
       trim: true,
-      maxlength: 1000,
-    },
-
-    // Optional: time spent (future evaluation metric)
-    durationMinutes: {
-      type: Number,
-      min: 0,
+      default: "",
     },
   },
   { timestamps: true }
 );
 
-// ✅ one log per user per recommendation
-WorkoutLogSchema.index({ userId: 1, recommendationId: 1 }, { unique: true });
-
-module.exports = mongoose.model("WorkoutLog", WorkoutLogSchema);
+module.exports = mongoose.model("WorkoutLog", workoutLogSchema);

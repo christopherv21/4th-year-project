@@ -1,46 +1,30 @@
 const mongoose = require("mongoose");
 
-const ProfileSchema = new mongoose.Schema(
+const profileSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      unique: true, // 1 profile per user
-      index: true,
+      unique: true,
     },
-
     fitnessLevel: {
       type: String,
       enum: ["beginner", "intermediate", "advanced"],
       required: true,
     },
-
     goal: {
       type: String,
-      enum: ["strength", "hypertrophy", "endurance", "fat_loss"],
+      enum: ["strength", "hypertrophy", "endurance"],
       required: true,
     },
-
-    daysPerWeek: {
-      type: Number,
-      min: 1,
-      max: 7,
-      required: true,
-    },
-
     equipment: {
       type: String,
-      enum: ["gym", "home", "calisthenics", "mixed", "bodyweight"],
-      default: "mixed",
+      enum: ["gym", "dumbbells", "bodyweight"],
+      required: true,
     },
-
-    // optional but useful for your algorithm + evaluation
-    heightCm: { type: Number, min: 50, max: 250 },
-    weightKg: { type: Number, min: 20, max: 300 },
-    injuriesNotes: { type: String, maxlength: 500 },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Profile", ProfileSchema);
+module.exports = mongoose.model("Profile", profileSchema);
