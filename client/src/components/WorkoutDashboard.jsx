@@ -1,8 +1,21 @@
 import React from "react";
 
+const formatDifficultyLabel = (value) => {
+  if (value === "just_right") return "Just right";
+  if (value === "too_easy") return "Too easy";
+  if (value === "too_hard") return "Too hard";
+  return "-";
+};
+
+const formatMetric = (value, suffix = "") => {
+  if (value === null || value === undefined) return "-";
+  return `${value}${suffix}`;
+};
+
 export default function WorkoutDashboard({
   workout,
   latestLog,
+  evaluationSummary,
   onGenerateBaseline,
   onGeneratePersonalised,
   loading = false,
@@ -46,6 +59,10 @@ export default function WorkoutDashboard({
       ? "Baseline"
       : "None";
 
+  const personalised = evaluationSummary?.personalised || null;
+  const baseline = evaluationSummary?.baseline || null;
+  const totalLogs = evaluationSummary?.overall?.totalLogs || 0;
+
   const handleBaselineClick = () => {
     if (typeof onGenerateBaseline === "function") {
       onGenerateBaseline();
@@ -57,6 +74,20 @@ export default function WorkoutDashboard({
       onGeneratePersonalised();
     }
   };
+
+  const personalisedCompletion = personalised?.completionRate ?? 0;
+  const baselineCompletion = baseline?.completionRate ?? 0;
+
+  let recommendationText = "Not enough data yet";
+  if (totalLogs > 0) {
+    if (personalisedCompletion > baselineCompletion) {
+      recommendationText = "Personalised workouts are currently performing better than baseline.";
+    } else if (baselineCompletion > personalisedCompletion) {
+      recommendationText = "Baseline workouts are currently performing better than personalised.";
+    } else {
+      recommendationText = "Personalised and baseline workouts are currently performing equally.";
+    }
+  }
 
   return (
     <div className="page-card">
@@ -156,7 +187,9 @@ export default function WorkoutDashboard({
           <div className="dashboard-info-list">
             <div className="dashboard-info-item">
               <span className="dashboard-info-label">Last Difficulty</span>
-              <span className={difficultyBadgeClass}>{difficultyText}</span>
+              <span className={difficultyBadgeClass}>
+                {formatDifficultyLabel(difficultyText)}
+              </span>
             </div>
 
             <div className="dashboard-info-item">
@@ -170,6 +203,13 @@ export default function WorkoutDashboard({
               <span className="dashboard-info-label">Structure Rating</span>
               <span className="dashboard-info-value">
                 {latestLog?.structureRating ?? "-"}
+              </span>
+            </div>
+
+            <div className="dashboard-info-item">
+              <span className="dashboard-info-label">Enjoyment Rating</span>
+              <span className="dashboard-info-value">
+                {latestLog?.enjoymentRating ?? "-"}
               </span>
             </div>
 
@@ -203,6 +243,81 @@ export default function WorkoutDashboard({
             </button>
           </div>
         </div>
+      </div>
+
+      <div className="dashboard-panel dashboard-eval-summary" style={{ marginTop: 20 }}>
+        <div className="dashboard-panel-top">
+          <h3>Evaluation Summary</h3>
+          <span className="badge badge-light">{totalLogs} logs</span>
+        </div>
+
+        {totalLogs === 0 ? (
+          <div className="empty-state">
+            <p>No evaluation data yet. Log baseline and personalised workouts to compare results.</p>
+          </div>
+        ) : (
+          <>
+            <div className="dashboard-stats-grid">
+              <div className="dashboard-stat-card">
+                <span className="dashboard-stat-label">Personalised Completion</span>
+                <span className="dashboard-stat-value">
+                  {formatMetric(personalisedCompletion, "%")}
+                </span>
+              </div>
+
+              <div className="dashboard-stat-card">
+                <span className="dashboard-stat-label">Baseline Completion</span>
+                <span className="dashboard-stat-value">
+                  {formatMetric(baselineCompletion, "%")}
+                </span>
+              </div>
+
+              <div className="dashboard-stat-card">
+                <span className="dashboard-stat-label">Personalised Avg Suitability</span>
+                <span className="dashboard-stat-value">
+                  {formatMetric(personalised?.avgSuitability)}
+                </span>
+              </div>
+
+              <div className="dashboard-stat-card">
+                <span className="dashboard-stat-label">Baseline Avg Suitability</span>
+                <span className="dashboard-stat-value">
+                  {formatMetric(baseline?.avgSuitability)}
+                </span>
+              </div>
+            </div>
+
+            <div className="dashboard-info-list" style={{ marginTop: 18 }}>
+              <div className="insight-highlight">
+            Current Insight: {recommendationText}
+            </div>
+
+              <div className="dashboard-info-item">
+                <span className="dashboard-info-label">Personalised Logs</span>
+                <span className="dashboard-info-value">{personalised?.totalLogs ?? 0}</span>
+              </div>
+
+              <div className="dashboard-info-item">
+                <span className="dashboard-info-label">Baseline Logs</span>
+                <span className="dashboard-info-value">{baseline?.totalLogs ?? 0}</span>
+              </div>
+
+              <div className="dashboard-info-item">
+                <span className="dashboard-info-label">Difficulty Match (Personalised)</span>
+                <span className="dashboard-info-value">
+                  {formatMetric(personalised?.difficultyPercentages?.just_right, "%")}
+                </span>
+              </div>
+
+              <div className="dashboard-info-item">
+                <span className="dashboard-info-label">Difficulty Match (Baseline)</span>
+                <span className="dashboard-info-value">
+                  {formatMetric(baseline?.difficultyPercentages?.just_right, "%")}
+                </span>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

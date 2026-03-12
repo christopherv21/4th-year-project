@@ -2,101 +2,35 @@ import { useEffect, useState } from "react";
 import { apiFetch } from "../api";
 
 function EvaluationResults({ refreshKey, token }) {
-  const [logs, setLogs] = useState([]);
+  const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
   const [errMsg, setErrMsg] = useState("");
 
   useEffect(() => {
-    const fetchLogs = async () => {
+    const fetchSummary = async () => {
       if (!token) return;
 
       setLoading(true);
       setErrMsg("");
 
       try {
-        const data = await apiFetch("/api/workout-logs", { token });
-        setLogs(Array.isArray(data) ? data : []);
+        const data = await apiFetch("/api/workout-logs/evaluation-summary", { token });
+        setSummary(data || null);
       } catch (e) {
         setErrMsg(e?.message || "Failed to load evaluation results");
-        setLogs([]);
+        setSummary(null);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchLogs();
+    fetchSummary();
   }, [refreshKey, token]);
 
-  const calculateMetrics = () => {
-    if (!logs.length) return null;
-
-    const personalisedLogs = logs.filter(
-      (log) => log.recommendationId?.workoutType === "personalised"
-    );
-
-    const baselineLogs = logs.filter(
-      (log) => log.recommendationId?.workoutType === "baseline"
-    );
-
-    const average = (arr, field) => {
-      const values = arr
-        .map((item) => item[field])
-        .filter((value) => typeof value === "number");
-
-      if (!values.length) return null;
-
-      const total = values.reduce((sum, value) => sum + value, 0);
-      return total / values.length;
-    };
-
-    const completionRate = (arr) => {
-      if (!arr.length) return 0;
-      const completedCount = arr.filter((item) => item.completed).length;
-      return completedCount / arr.length;
-    };
-
-    const difficultyBreakdown = (arr) => {
-      const counts = {
-        too_easy: 0,
-        just_right: 0,
-        too_hard: 0,
-      };
-
-      arr.forEach((item) => {
-        if (item.difficultyFeedback && counts[item.difficultyFeedback] !== undefined) {
-          counts[item.difficultyFeedback] += 1;
-        }
-      });
-
-      return counts;
-    };
-
-    return {
-      totals: {
-        totalLogs: logs.length,
-        completionRate: completionRate(logs),
-      },
-      personalised: {
-        totalLogs: personalisedLogs.length,
-        completionRate: completionRate(personalisedLogs),
-        avgSuitability: average(personalisedLogs, "suitabilityRating"),
-        avgStructure: average(personalisedLogs, "structureRating"),
-        difficulty: difficultyBreakdown(personalisedLogs),
-      },
-      baseline: {
-        totalLogs: baselineLogs.length,
-        completionRate: completionRate(baselineLogs),
-        avgSuitability: average(baselineLogs, "suitabilityRating"),
-        avgStructure: average(baselineLogs, "structureRating"),
-        difficulty: difficultyBreakdown(baselineLogs),
-      },
-    };
+  const fmt = (value, suffix = "") => {
+    if (value === null || value === undefined) return "-";
+    return `${value}${suffix}`;
   };
-
-  const metrics = calculateMetrics();
-
-  const pct = (x) => `${Math.round((x || 0) * 100)}%`;
-  const fmt = (n) => (n != null ? Number(n).toFixed(2) : "-");
 
   const difficultyBadge = (label, value, type) => {
     let className = "badge badge-light";
@@ -113,32 +47,44 @@ function EvaluationResults({ refreshKey, token }) {
     );
   };
 
+  const totalLogs = summary?.overall?.totalLogs || 0;
+  const personalised = summary?.personalised || null;
+  const baseline = summary?.baseline || null;
+
+  const overallCompletionRate =
+    totalLogs > 0 && personalised && baseline
+      ? Math.round(
+          (((personalised.completedCount || 0) + (baseline.completedCount || 0)) / totalLogs) *
+            100
+        )
+      : 0;
+
   return (
     <div className="card">
       <div className="section-header">
-        <h2>📊 Evaluation Results</h2>
+        <h2>📊 Detailed Evaluation Results</h2>
       </div>
 
       {loading && <p className="status-text">Loading...</p>}
       {errMsg && <p className="status-text error-text">{errMsg}</p>}
 
-      {!loading && !metrics && !errMsg && (
+      {!loading && !errMsg && totalLogs === 0 && (
         <div className="empty-state">
           <p>No metrics yet — submit workout feedback to generate evaluation results.</p>
         </div>
       )}
 
-      {!loading && metrics && (
+      {!loading && !errMsg && totalLogs > 0 && (
         <div className="evaluation-layout">
           <div className="stats-grid">
             <div className="stat-card">
               <span className="stat-label">Total Logs</span>
-              <span className="stat-value">{metrics.totals.totalLogs}</span>
+              <span className="stat-value">{totalLogs}</span>
             </div>
 
             <div className="stat-card">
               <span className="stat-label">Overall Completion</span>
-              <span className="stat-value">{pct(metrics.totals.completionRate)}</span>
+              <span className="stat-value">{overallCompletionRate}%</span>
             </div>
           </div>
 
@@ -150,17 +96,31 @@ function EvaluationResults({ refreshKey, token }) {
               </div>
 
               <div className="summary-lines">
-                <p><strong>Total Logs:</strong> {metrics.personalised.totalLogs}</p>
-                <p><strong>Completion Rate:</strong> {pct(metrics.personalised.completionRate)}</p>
-                <p><strong>Average Suitability:</strong> {fmt(metrics.personalised.avgSuitability)}</p>
-                <p><strong>Average Structure:</strong> {fmt(metrics.personalised.avgStructure)}</p>
+                <p><strong>Total Logs:</strong> {personalised?.totalLogs ?? 0}</p>
+                <p><strong>Completion Rate:</strong> {fmt(personalised?.completionRate, "%")}</p>
+                <p><strong>Average Suitability:</strong> {fmt(personalised?.avgSuitability)}</p>
+                <p><strong>Average Structure:</strong> {fmt(personalised?.avgStructure)}</p>
+                <p><strong>Average Enjoyment:</strong> {fmt(personalised?.avgEnjoyment)}</p>
+                <p><strong>Average Duration:</strong> {fmt(personalised?.avgDurationActual, " min")}</p>
               </div>
 
               <div className="difficulty-box">
                 <h4>Difficulty Breakdown</h4>
-                {difficultyBadge("Too Easy", metrics.personalised.difficulty.too_easy, "warning")}
-                {difficultyBadge("Just Right", metrics.personalised.difficulty.just_right, "success")}
-                {difficultyBadge("Too Hard", metrics.personalised.difficulty.too_hard, "danger")}
+                {difficultyBadge(
+                  "Too Easy",
+                  `${personalised?.difficultyCounts?.too_easy ?? 0} (${personalised?.difficultyPercentages?.too_easy ?? 0}%)`,
+                  "warning"
+                )}
+                {difficultyBadge(
+                  "Just Right",
+                  `${personalised?.difficultyCounts?.just_right ?? 0} (${personalised?.difficultyPercentages?.just_right ?? 0}%)`,
+                  "success"
+                )}
+                {difficultyBadge(
+                  "Too Hard",
+                  `${personalised?.difficultyCounts?.too_hard ?? 0} (${personalised?.difficultyPercentages?.too_hard ?? 0}%)`,
+                  "danger"
+                )}
               </div>
             </div>
 
@@ -171,17 +131,31 @@ function EvaluationResults({ refreshKey, token }) {
               </div>
 
               <div className="summary-lines">
-                <p><strong>Total Logs:</strong> {metrics.baseline.totalLogs}</p>
-                <p><strong>Completion Rate:</strong> {pct(metrics.baseline.completionRate)}</p>
-                <p><strong>Average Suitability:</strong> {fmt(metrics.baseline.avgSuitability)}</p>
-                <p><strong>Average Structure:</strong> {fmt(metrics.baseline.avgStructure)}</p>
+                <p><strong>Total Logs:</strong> {baseline?.totalLogs ?? 0}</p>
+                <p><strong>Completion Rate:</strong> {fmt(baseline?.completionRate, "%")}</p>
+                <p><strong>Average Suitability:</strong> {fmt(baseline?.avgSuitability)}</p>
+                <p><strong>Average Structure:</strong> {fmt(baseline?.avgStructure)}</p>
+                <p><strong>Average Enjoyment:</strong> {fmt(baseline?.avgEnjoyment)}</p>
+                <p><strong>Average Duration:</strong> {fmt(baseline?.avgDurationActual, " min")}</p>
               </div>
 
               <div className="difficulty-box">
                 <h4>Difficulty Breakdown</h4>
-                {difficultyBadge("Too Easy", metrics.baseline.difficulty.too_easy, "warning")}
-                {difficultyBadge("Just Right", metrics.baseline.difficulty.just_right, "success")}
-                {difficultyBadge("Too Hard", metrics.baseline.difficulty.too_hard, "danger")}
+                {difficultyBadge(
+                  "Too Easy",
+                  `${baseline?.difficultyCounts?.too_easy ?? 0} (${baseline?.difficultyPercentages?.too_easy ?? 0}%)`,
+                  "warning"
+                )}
+                {difficultyBadge(
+                  "Just Right",
+                  `${baseline?.difficultyCounts?.just_right ?? 0} (${baseline?.difficultyPercentages?.just_right ?? 0}%)`,
+                  "success"
+                )}
+                {difficultyBadge(
+                  "Too Hard",
+                  `${baseline?.difficultyCounts?.too_hard ?? 0} (${baseline?.difficultyPercentages?.too_hard ?? 0}%)`,
+                  "danger"
+                )}
               </div>
             </div>
           </div>

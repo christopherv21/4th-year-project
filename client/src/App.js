@@ -28,6 +28,7 @@ function App() {
 
   const [logs, setLogs] = useState([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
+  const [evaluationSummary, setEvaluationSummary] = useState(null);
 
   const [refreshKey, setRefreshKey] = useState(0);
   const refreshSummary = () => setRefreshKey((prev) => prev + 1);
@@ -98,6 +99,7 @@ function App() {
 
     setLogs([]);
     setLoadingLogs(false);
+    setEvaluationSummary(null);
 
     setError("");
     setRecError("");
@@ -212,6 +214,21 @@ function App() {
     };
 
     loadLogs();
+  }, [token, refreshKey]);
+
+  useEffect(() => {
+    const loadEvaluationSummary = async () => {
+      if (!token) return;
+
+      try {
+        const data = await apiFetch("/api/workout-logs/evaluation-summary", { token });
+        setEvaluationSummary(data);
+      } catch (err) {
+        setEvaluationSummary(null);
+      }
+    };
+
+    loadEvaluationSummary();
   }, [token, refreshKey]);
 
   const resetRecommendationUi = () => {
@@ -331,7 +348,10 @@ function App() {
 
   const latestLog =
     Array.isArray(logs) && logs.length > 0
-      ? [...logs].sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt))[0]
+      ? [...logs].sort(
+          (a, b) =>
+            new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt)
+        )[0]
       : null;
 
   if (!user) {
@@ -502,6 +522,7 @@ function App() {
           <WorkoutDashboard
             workout={recommendedRec}
             latestLog={latestLog}
+            evaluationSummary={evaluationSummary}
             loading={loadingRec || selectingWorkout}
             onGenerateBaseline={() => generateRecommendation("baseline")}
             onGeneratePersonalised={() => generateRecommendation("personalised")}

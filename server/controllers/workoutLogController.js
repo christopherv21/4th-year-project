@@ -10,6 +10,60 @@ const normaliseOptionalRating = (value) => {
   return parsed;
 };
 
+const roundToTwo = (value) => Math.round(value * 100) / 100;
+
+const averageFrom = (items, selector) => {
+  const values = items
+    .map(selector)
+    .filter((value) => typeof value === "number" && !Number.isNaN(value));
+
+  if (values.length === 0) return null;
+
+  const sum = values.reduce((acc, value) => acc + value, 0);
+  return roundToTwo(sum / values.length);
+};
+
+const percentage = (part, total) => {
+  if (!total) return 0;
+  return roundToTwo((part / total) * 100);
+};
+
+const buildGroupSummary = (logs) => {
+  const totalLogs = logs.length;
+  const completedCount = logs.filter((log) => log.completed === true).length;
+
+  const difficultyCounts = {
+    just_right: 0,
+    too_easy: 0,
+    too_hard: 0,
+  };
+
+  logs.forEach((log) => {
+    const key = log.difficultyFeedback || "just_right";
+    if (difficultyCounts[key] !== undefined) {
+      difficultyCounts[key] += 1;
+    }
+  });
+
+  return {
+    totalLogs,
+    completedCount,
+    completionRate: percentage(completedCount, totalLogs),
+
+    avgSuitability: averageFrom(logs, (log) => log.suitabilityRating),
+    avgStructure: averageFrom(logs, (log) => log.structureRating),
+    avgEnjoyment: averageFrom(logs, (log) => log.enjoymentRating),
+    avgDurationActual: averageFrom(logs, (log) => log.durationActual),
+
+    difficultyCounts,
+    difficultyPercentages: {
+      just_right: percentage(difficultyCounts.just_right, totalLogs),
+      too_easy: percentage(difficultyCounts.too_easy, totalLogs),
+      too_hard: percentage(difficultyCounts.too_hard, totalLogs),
+    },
+  };
+};
+
 const logWorkout = async (req, res) => {
   try {
     const {
@@ -111,7 +165,46 @@ const getMyWorkoutLogs = async (req, res) => {
   }
 };
 
+const getEvaluationSummary = async (req, res) => {
+  try {
+    const logs = await WorkoutLog.find({ userId: req.userId })
+      .populate("recommendationId")
+      .sort({ updatedAt: -1, createdAt: -1 });
+
+    const validLogs = logs.filter(
+      (log) =>
+        log.recommendationId &&
+        (log.recommendationId.workoutType === "baseline" ||
+          log.recommendationId.workoutType === "personalised")
+    );
+
+    const personalisedLogs = validLogs.filter(
+      (log) => log.recommendationId.workoutType === "personalised"
+    );
+
+    const baselineLogs = validLogs.filter(
+      (log) => log.recommendationId.workoutType === "baseline"
+    );
+
+    const response = {
+      overall: {
+        totalLogs: validLogs.length,
+      },
+      personalised: buildGroupSummary(personalisedLogs),
+      baseline: buildGroupSummary(baselineLogs),
+    };
+
+    return res.status(200).json(response);
+  } catch (error) {
+    return res.status(500).json({
+      message: "Failed to fetch evaluation summary",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   logWorkout,
   getMyWorkoutLogs,
+  getEvaluationSummary,
 };

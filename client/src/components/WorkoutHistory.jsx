@@ -1,6 +1,19 @@
 import { useEffect, useState } from "react";
 import { apiFetch } from "../api";
 
+const formatWorkoutType = (type) => {
+  if (type === "personalised") return "Personalised";
+  if (type === "baseline") return "Baseline";
+  return "-";
+};
+
+const formatDifficulty = (difficulty) => {
+  if (difficulty === "just_right") return "Just right";
+  if (difficulty === "too_easy") return "Too easy";
+  if (difficulty === "too_hard") return "Too hard";
+  return "-";
+};
+
 export default function WorkoutHistory({ refreshKey, token }) {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -68,13 +81,16 @@ export default function WorkoutHistory({ refreshKey, token }) {
               <div className="history-item-top">
                 <div>
                   <p className="history-date">
-                    {new Date(log.createdAt).toLocaleString()}
+                    Created: {new Date(log.createdAt).toLocaleString()}
                   </p>
-                  <h3 style={{ marginTop: 6 }}>{title}</h3>
+                  <p className="history-date" style={{ marginTop: 4 }}>
+                    Updated: {new Date(log.updatedAt || log.createdAt).toLocaleString()}
+                  </p>
+                  <h3 style={{ marginTop: 8 }}>{title}</h3>
                 </div>
 
                 <span className={getWorkoutTypeBadgeClass(workoutType)}>
-                  {workoutType}
+                  {formatWorkoutType(workoutType)}
                 </span>
               </div>
 
@@ -97,9 +113,21 @@ export default function WorkoutHistory({ refreshKey, token }) {
                 </div>
 
                 <div className="metric-pill">
+                  <span className="metric-label">Enjoyment</span>
+                  <span className="metric-value">{log.enjoymentRating ?? "-"}</span>
+                </div>
+
+                <div className="metric-pill">
                   <span className="metric-label">Difficulty</span>
                   <span className={getDifficultyBadgeClass(log.difficultyFeedback)}>
-                    {log.difficultyFeedback || "-"}
+                    {formatDifficulty(log.difficultyFeedback)}
+                  </span>
+                </div>
+
+                <div className="metric-pill">
+                  <span className="metric-label">Duration</span>
+                  <span className="metric-value">
+                    {log.durationActual != null ? `${log.durationActual} min` : "-"}
                   </span>
                 </div>
               </div>

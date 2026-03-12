@@ -854,6 +854,50 @@ button {
   width: 100%;
 }
 
+.dashboard-eval-summary {
+  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+  border: 1px solid #dbe7f5;
+}
+
+.dashboard-eval-summary .dashboard-panel-top h3 {
+  font-size: 1.35rem;
+}
+
+.dashboard-eval-summary .dashboard-stat-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: none;
+}
+
+.dashboard-eval-summary .dashboard-info-item {
+  background: #ffffff;
+}
+
+.insight-highlight {
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e3a8a;
+  font-weight: 700;
+}
+
+.evaluation-layout .stat-card {
+  min-height: 110px;
+}
+
+.evaluation-layout .summary-card {
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+}
+
+.evaluation-layout .summary-card-top h3 {
+  font-size: 1.3rem;
+}
+
+.evaluation-layout .difficulty-box {
+  border: 1px solid #e2e8f0;
+}
+
 @media (max-width: 900px) {
   .dashboard-main-grid {
     grid-template-columns: 1fr;
@@ -907,4 +951,4 @@ button {
     flex-direction: column;
     align-items: flex-start;
   }
-}
+} 
