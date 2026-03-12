@@ -37,13 +37,18 @@ function App() {
 
   const [recommendedRec, setRecommendedRec] = useState(null);
   const [recommendedExercises, setRecommendedExercises] = useState([]);
+  const [recommendedOptions, setRecommendedOptions] = useState([]);
+
   const [loadingRec, setLoadingRec] = useState(false);
+  const [selectingWorkout, setSelectingWorkout] = useState(false);
   const [currentCondition, setCurrentCondition] = useState("");
 
   const [completed, setCompleted] = useState(false);
   const [suitabilityRating, setSuitabilityRating] = useState(5);
   const [structureRating, setStructureRating] = useState(5);
+  const [enjoymentRating, setEnjoymentRating] = useState(5);
   const [difficultyFeedback, setDifficultyFeedback] = useState("just_right");
+  const [durationActual, setDurationActual] = useState("");
   const [notes, setNotes] = useState("");
 
   const [submitMsg, setSubmitMsg] = useState("");
@@ -88,6 +93,7 @@ function App() {
     setExercises([]);
     setRecommendedRec(null);
     setRecommendedExercises([]);
+    setRecommendedOptions([]);
     setCurrentCondition("");
 
     setLogs([]);
@@ -104,11 +110,14 @@ function App() {
     setCompleted(false);
     setSuitabilityRating(5);
     setStructureRating(5);
+    setEnjoymentRating(5);
     setDifficultyFeedback("just_right");
+    setDurationActual("");
     setNotes("");
     setSubmitMsg("");
     setSubmitErr("");
     setSubmitting(false);
+    setSelectingWorkout(false);
 
     setEditingProfile(false);
     setPage("dashboard");
@@ -205,35 +214,67 @@ function App() {
     loadLogs();
   }, [token, refreshKey]);
 
+  const resetRecommendationUi = () => {
+    setRecommendedRec(null);
+    setRecommendedExercises([]);
+    setRecommendedOptions([]);
+    setSubmitMsg("");
+    setSubmitErr("");
+    setRecError("");
+  };
+
   const generateRecommendation = async (condition = "personalised") => {
     try {
       setCurrentCondition(condition);
       setLoadingRec(true);
-      setRecError("");
-      setSubmitMsg("");
-      setSubmitErr("");
-
-      setRecommendedRec(null);
-      setRecommendedExercises([]);
+      resetRecommendationUi();
 
       const endpoint =
         condition === "baseline"
           ? "/api/recommendations/baseline"
-          : "/api/recommendations/personalised";
+          : "/api/recommendations/personalised-options";
 
       const rec = await apiFetch(endpoint, {
         method: "POST",
         token,
       });
 
-      setRecommendedRec(rec);
-      setRecommendedExercises(Array.isArray(rec?.exercises) ? rec.exercises : []);
+      if (condition === "baseline") {
+        setRecommendedRec(rec);
+        setRecommendedExercises(Array.isArray(rec?.exercises) ? rec.exercises : []);
+      } else {
+        setRecommendedOptions(Array.isArray(rec?.options) ? rec.options : []);
+      }
     } catch (err) {
-      setRecommendedRec(null);
-      setRecommendedExercises([]);
+      resetRecommendationUi();
       setRecError(err.message || "Failed to generate recommendation");
     } finally {
       setLoadingRec(false);
+    }
+  };
+
+  const selectPersonalisedWorkout = async (selectedWorkout) => {
+    try {
+      setSelectingWorkout(true);
+      setRecError("");
+      setSubmitMsg("");
+      setSubmitErr("");
+
+      const savedRecommendation = await apiFetch("/api/recommendations/personalised-select", {
+        method: "POST",
+        body: JSON.stringify({ selectedWorkout }),
+        token,
+      });
+
+      setRecommendedRec(savedRecommendation);
+      setRecommendedExercises(
+        Array.isArray(savedRecommendation?.exercises) ? savedRecommendation.exercises : []
+      );
+      setRecommendedOptions([]);
+    } catch (err) {
+      setRecError(err.message || "Failed to select personalised workout");
+    } finally {
+      setSelectingWorkout(false);
     }
   };
 
@@ -243,7 +284,9 @@ function App() {
     setCompleted(false);
     setSuitabilityRating(5);
     setStructureRating(5);
+    setEnjoymentRating(5);
     setDifficultyFeedback("just_right");
+    setDurationActual("");
     setNotes("");
     setSubmitMsg("");
     setSubmitErr("");
@@ -261,22 +304,24 @@ function App() {
     setSubmitting(true);
 
     try {
-      await apiFetch("/api/workout-logs", {
+      const response = await apiFetch("/api/workout-logs", {
         method: "POST",
         body: JSON.stringify({
           recommendationId: recommendedRec._id,
           completed,
           suitabilityRating: Number(suitabilityRating),
           structureRating: Number(structureRating),
+          enjoymentRating: Number(enjoymentRating),
           difficultyFeedback,
+          durationActual: durationActual === "" ? null : Number(durationActual),
           notes,
         }),
         token,
       });
 
-      setSubmitMsg("Feedback saved successfully.");
+      setSubmitMsg(response.message || "Feedback saved successfully.");
       refreshSummary();
-      setPage("dashboard");
+      setPage("progress");
     } catch (err) {
       setSubmitErr(err.message || "Failed to submit feedback.");
     } finally {
@@ -286,7 +331,7 @@ function App() {
 
   const latestLog =
     Array.isArray(logs) && logs.length > 0
-      ? [...logs].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0]
+      ? [...logs].sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt))[0]
       : null;
 
   if (!user) {
@@ -357,17 +402,27 @@ function App() {
 
             <button
               type="button"
-              onClick={() => setPage("profile")}
-              className={`tab-btn ${page === "profile" ? "active" : ""}`}
+              onClick={() => setPage("progress")}
+              className={`tab-btn ${page === "progress" ? "active" : ""}`}
             >
-              Workout Profile
+              Progress
             </button>
           </div>
         </div>
 
         <div className="top-right">
           <span className="user-chip">👤 {user.username}</span>
-          <button onClick={handleLogout} className="logout-btn">
+          <button
+            type="button"
+            onClick={() => {
+              setPage("dashboard");
+              setEditingProfile((prev) => !prev);
+            }}
+            className="secondary-btn"
+          >
+            {editingProfile ? "Close Profile" : "Edit Profile"}
+          </button>
+          <button type="button" onClick={handleLogout} className="logout-btn">
             Logout
           </button>
         </div>
@@ -384,8 +439,8 @@ function App() {
             onSaved={async () => {
               await fetchProfile();
               refreshSummary();
-              setPage("profile");
-              setEditingProfile(true);
+              setPage("dashboard");
+              setEditingProfile(false);
             }}
           />
         </div>
@@ -393,54 +448,61 @@ function App() {
         <div className="page-card">
           <WorkoutHistory refreshKey={refreshKey} token={token} />
         </div>
-      ) : page === "profile" ? (
+      ) : page === "progress" ? (
         <div className="page-card">
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: 12,
-              flexWrap: "wrap",
-            }}
-          >
-            <div>
-              👤 <b>Profile:</b> {profile?.fitnessLevel} | {profile?.goal} |{" "}
-              {profile?.equipment}
-            </div>
-
-            <button
-              onClick={() => setEditingProfile((v) => !v)}
-              className="secondary-btn"
-            >
-              {editingProfile ? "Close" : "Edit Profile"}
-            </button>
-          </div>
-
-          {editingProfile ? (
-            <div style={{ marginTop: 16 }}>
-              <ProfileSetup
-                token={token}
-                mode="edit"
-                existingProfile={profile}
-                onSaved={async () => {
-                  setEditingProfile(false);
-                  await fetchProfile();
-                  refreshSummary();
-                }}
-              />
-            </div>
-          ) : (
-            <p className="subtle-text" style={{ marginTop: 14 }}>
-              Tip: Click <b>Edit Profile</b> to update your workout preferences.
-            </p>
-          )}
+          <h2 className="section-title">Progress & Insights</h2>
+          <p className="subtle-text" style={{ marginTop: 0 }}>
+            Track workout completion, ratings, and how your personalised recommendations are
+            performing over time.
+          </p>
+          <EvaluationResults refreshKey={refreshKey} token={token} />
         </div>
       ) : (
         <>
+          {editingProfile && (
+            <div className="page-card">
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 12,
+                  flexWrap: "wrap",
+                }}
+              >
+                <div>
+                  👤 <b>Profile:</b> {profile?.fitnessLevel} | {profile?.goal} |{" "}
+                  {profile?.equipment}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setEditingProfile(false)}
+                  className="secondary-btn"
+                >
+                  Close
+                </button>
+              </div>
+
+              <div style={{ marginTop: 16 }}>
+                <ProfileSetup
+                  token={token}
+                  mode="edit"
+                  existingProfile={profile}
+                  onSaved={async () => {
+                    setEditingProfile(false);
+                    await fetchProfile();
+                    refreshSummary();
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
           <WorkoutDashboard
             workout={recommendedRec}
             latestLog={latestLog}
+            loading={loadingRec || selectingWorkout}
             onGenerateBaseline={() => generateRecommendation("baseline")}
             onGeneratePersonalised={() => generateRecommendation("personalised")}
           />
@@ -451,12 +513,8 @@ function App() {
           </div>
 
           <div className="page-card">
-            <EvaluationResults refreshKey={refreshKey} token={token} />
-          </div>
-
-          <div className="page-card">
             <h2 className="section-title">
-              Workout Generator{" "}
+              Choose Your Workout Goal{" "}
               {currentCondition ? (
                 <span style={{ fontSize: "1rem", fontWeight: 500 }}>
                   (type: <b>{currentCondition}</b>)
@@ -464,10 +522,16 @@ function App() {
               ) : null}
             </h2>
 
+            <p className="subtle-text" style={{ marginTop: 0 }}>
+              Choose your lower-body workout goal. The system will generate personalised
+              strength, hypertrophy, and endurance options based on your profile and available
+              equipment.
+            </p>
+
             <div className="action-row">
               <button
                 type="button"
-                disabled={loadingRec}
+                disabled={loadingRec || selectingWorkout}
                 aria-pressed={currentCondition === "baseline"}
                 onClick={() => generateRecommendation("baseline")}
                 className={`action-btn ${currentCondition === "baseline" ? "active" : ""}`}
@@ -479,23 +543,74 @@ function App() {
 
               <button
                 type="button"
-                disabled={loadingRec}
+                disabled={loadingRec || selectingWorkout}
                 aria-pressed={currentCondition === "personalised"}
                 onClick={() => generateRecommendation("personalised")}
                 className={`action-btn ${currentCondition === "personalised" ? "active" : ""}`}
               >
                 {loadingRec && currentCondition === "personalised"
                   ? "Generating..."
-                  : "Generate Personalised Workout"}
+                  : "Generate Goal-Based Workout Options"}
               </button>
             </div>
 
             {loadingRec && <p>Generating recommendation...</p>}
+            {selectingWorkout && <p>Saving selected workout...</p>}
             {recError && <p className="status-error">{recError}</p>}
 
-            {!loadingRec && recommendedExercises.length === 0 && !recError && (
-              <div className="empty-state">
-                No recommendation loaded yet — click one of the buttons above.
+            {!loadingRec &&
+              !selectingWorkout &&
+              recommendedExercises.length === 0 &&
+              recommendedOptions.length === 0 &&
+              !recError && (
+                <div className="empty-state">
+                  No recommendation loaded yet — click one of the buttons above.
+                </div>
+              )}
+
+            {currentCondition === "personalised" && recommendedOptions.length > 0 && (
+              <div className="personalised-options-grid">
+                {recommendedOptions.map((option, index) => (
+                  <div
+                    key={`${option.goal || option.template}-${index}`}
+                    className="personalised-option-card"
+                  >
+                    <div className="personalised-option-top">
+                      <div>
+                        <h3>{option.label}</h3>
+
+                        <p className="option-description">{option.description}</p>
+
+                        <div className="option-prescription">
+                          <span className="option-prescription-label">Prescription:</span>
+                          <span>
+                            {option.prescription?.sets ?? "-"} sets ×{" "}
+                            {option.prescription?.reps ?? "-"} reps
+                          </span>
+                        </div>
+                      </div>
+
+                      <span className="badge badge-dark">personalised</span>
+                    </div>
+
+                    <hr className="option-divider" />
+
+                    <h4 className="option-exercises-title">Exercises</h4>
+
+                    <ExercisesList exercises={option.exercises} />
+
+                    <div className="option-footer">
+                      <button
+                        type="button"
+                        className="primary-btn"
+                        disabled={selectingWorkout}
+                        onClick={() => selectPersonalisedWorkout(option)}
+                      >
+                        {selectingWorkout ? "Selecting..." : "Select This Workout"}
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
 
@@ -552,6 +667,19 @@ function App() {
 
                     <label className="inline-field">
                       <span>
+                        <b>Enjoyment Rating (1–5):</b>
+                      </span>
+                      <input
+                        type="number"
+                        min={1}
+                        max={5}
+                        value={enjoymentRating}
+                        onChange={(e) => setEnjoymentRating(Number(e.target.value))}
+                      />
+                    </label>
+
+                    <label className="inline-field">
+                      <span>
                         <b>Difficulty:</b>
                       </span>
                       <select
@@ -564,6 +692,18 @@ function App() {
                       </select>
                     </label>
 
+                    <label className="inline-field">
+                      <span>
+                        <b>Workout Duration (minutes):</b>
+                      </span>
+                      <input
+                        type="number"
+                        min={0}
+                        value={durationActual}
+                        onChange={(e) => setDurationActual(e.target.value)}
+                      />
+                    </label>
+
                     <div className="form-group">
                       <label>Notes</label>
                       <textarea
@@ -574,7 +714,12 @@ function App() {
                     </div>
                   </div>
 
-                  <button onClick={submitFeedback} disabled={submitting} className="primary-btn">
+                  <button
+                    type="button"
+                    onClick={submitFeedback}
+                    disabled={submitting}
+                    className="primary-btn"
+                  >
                     {submitting ? "Saving..." : "Submit Feedback"}
                   </button>
 
@@ -594,13 +739,16 @@ function App() {
           </div>
 
           <div className="page-card">
-            <h2 className="section-title">Exercise Database</h2>
+            <h2 className="section-title">System Dataset</h2>
+            <p className="subtle-text" style={{ marginTop: 0 }}>
+              Exercises stored in the database and used by the recommendation algorithm.
+            </p>
 
             {loadingExercises && <p>Loading exercises...</p>}
             {error && <p className="status-error">{error}</p>}
 
             {!loadingExercises && exercises.length === 0 && (
-              <div className="empty-state">No exercises found in the database.</div>
+              <div className="empty-state">No exercises found in the dataset.</div>
             )}
 
             <ExercisesList exercises={exercises} />

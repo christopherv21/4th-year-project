@@ -18,6 +18,7 @@ export default function ExercisesList({ exercises = [] }) {
         const sets = ex.sets ?? ex.prescribedSets;
         const reps = ex.reps ?? ex.prescribedReps;
         const restSeconds = ex.restSeconds ?? ex.rest ?? null;
+        const instructionUrl = ex.instructionUrl || "";
 
         return (
           <div key={id} className="exercise-item">
@@ -33,11 +34,16 @@ export default function ExercisesList({ exercises = [] }) {
               </div>
             </div>
 
-            {(ex.muscleGroup || ex.equipment) && (
+            {(ex.muscleGroup || ex.equipment || ex.category) && (
               <div className="exercise-meta">
                 {ex.muscleGroup && (
                   <span>
                     <strong>Muscle:</strong> {ex.muscleGroup}
+                  </span>
+                )}
+                {ex.category && (
+                  <span>
+                    <strong>Category:</strong> {ex.category}
                   </span>
                 )}
                 {ex.equipment && (
@@ -45,6 +51,14 @@ export default function ExercisesList({ exercises = [] }) {
                     <strong>Equipment:</strong> {ex.equipment}
                   </span>
                 )}
+              </div>
+            )}
+
+            {instructionUrl && (
+              <div className="exercise-link">
+                <a href={instructionUrl} target="_blank" rel="noreferrer">
+                  View exercise instructions
+                </a>
               </div>
             )}
           </div>

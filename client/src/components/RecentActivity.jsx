@@ -1,7 +1,10 @@
 import React from "react";
 
 export default function RecentActivity({ latestLog }) {
-  const workoutType = latestLog?.recommendationId?.workoutType || "-";
+  const recommendation = latestLog?.recommendationId;
+  const workoutType = recommendation?.workoutType || "-";
+  const sourceName = recommendation?.sourceName || "-";
+  const sourceUrl = recommendation?.sourceUrl || "";
   const completed = latestLog == null ? "-" : latestLog.completed ? "Yes" : "No";
   const difficulty = latestLog?.difficultyFeedback || "-";
   const suitability = latestLog?.suitabilityRating ?? "-";
@@ -63,6 +66,22 @@ export default function RecentActivity({ latestLog }) {
           <div className="snapshot-item">
             <span className="snapshot-label">Structure</span>
             <span className="snapshot-value">{structure}</span>
+          </div>
+
+          <div className="snapshot-item snapshot-item-wide">
+            <span className="snapshot-label">Source</span>
+            <span className="snapshot-value">
+              {sourceName}
+              {sourceUrl && (
+                <>
+                  {" "}
+                  •{" "}
+                  <a href={sourceUrl} target="_blank" rel="noreferrer">
+                    View source
+                  </a>
+                </>
+              )}
+            </span>
           </div>
 
           <div className="snapshot-item snapshot-item-wide">

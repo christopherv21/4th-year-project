@@ -59,6 +59,9 @@ export default function WorkoutHistory({ refreshKey, token }) {
         {logs.map((log) => {
           const recommendation = log.recommendationId;
           const workoutType = recommendation?.workoutType || "-";
+          const sourceName = recommendation?.sourceName || "-";
+          const sourceUrl = recommendation?.sourceUrl || "";
+          const title = recommendation?.title || "Workout";
 
           return (
             <div key={log._id} className="history-item">
@@ -67,6 +70,7 @@ export default function WorkoutHistory({ refreshKey, token }) {
                   <p className="history-date">
                     {new Date(log.createdAt).toLocaleString()}
                   </p>
+                  <h3 style={{ marginTop: 6 }}>{title}</h3>
                 </div>
 
                 <span className={getWorkoutTypeBadgeClass(workoutType)}>
@@ -98,6 +102,19 @@ export default function WorkoutHistory({ refreshKey, token }) {
                     {log.difficultyFeedback || "-"}
                   </span>
                 </div>
+              </div>
+
+              <div className="notes-box" style={{ marginTop: 12 }}>
+                <strong>Source:</strong> {sourceName}
+                {sourceUrl && (
+                  <>
+                    {" "}
+                    •{" "}
+                    <a href={sourceUrl} target="_blank" rel="noreferrer">
+                      View source
+                    </a>
+                  </>
+                )}
               </div>
 
               {recommendation?.exercises?.length > 0 && (

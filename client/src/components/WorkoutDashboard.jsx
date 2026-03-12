@@ -5,6 +5,7 @@ export default function WorkoutDashboard({
   latestLog,
   onGenerateBaseline,
   onGeneratePersonalised,
+  loading = false,
 }) {
   const exerciseCount = workout?.exercises?.length || 0;
 
@@ -14,6 +15,8 @@ export default function WorkoutDashboard({
       : "-";
 
   const workoutType = workout?.workoutType || "none";
+  const sourceName = workout?.sourceName || "-";
+  const sourceUrl = workout?.sourceUrl || "";
 
   const completedText =
     latestLog == null ? "No logs yet" : latestLog.completed ? "Completed" : "Not completed";
@@ -36,6 +39,25 @@ export default function WorkoutDashboard({
       ? "badge badge-danger"
       : "badge badge-light";
 
+  const displayWorkoutType =
+    workoutType === "personalised"
+      ? "Personalised"
+      : workoutType === "baseline"
+      ? "Baseline"
+      : "None";
+
+  const handleBaselineClick = () => {
+    if (typeof onGenerateBaseline === "function") {
+      onGenerateBaseline();
+    }
+  };
+
+  const handlePersonalisedClick = () => {
+    if (typeof onGeneratePersonalised === "function") {
+      onGeneratePersonalised();
+    }
+  };
+
   return (
     <div className="page-card">
       <div className="section-header">
@@ -46,7 +68,7 @@ export default function WorkoutDashboard({
         <div className="dashboard-stat-card">
           <span className="dashboard-stat-label">Today's Workout</span>
           <div className="dashboard-stat-row">
-            <span className={badgeClass}>{workoutType}</span>
+            <span className={badgeClass}>{displayWorkoutType}</span>
           </div>
         </div>
 
@@ -70,7 +92,7 @@ export default function WorkoutDashboard({
         <div className="dashboard-panel">
           <div className="dashboard-panel-top">
             <h3>Today's Plan</h3>
-            <span className={badgeClass}>{workoutType}</span>
+            <span className={badgeClass}>{displayWorkoutType}</span>
           </div>
 
           {!workout?.exercises?.length ? (
@@ -83,16 +105,35 @@ export default function WorkoutDashboard({
                 Your current workout contains <strong>{exerciseCount}</strong> exercises.
               </p>
 
+              <p className="subtle-text" style={{ marginTop: 8 }}>
+                <strong>Source:</strong> {sourceName}
+                {sourceUrl && (
+                  <>
+                    {" "}
+                    •{" "}
+                    <a href={sourceUrl} target="_blank" rel="noreferrer">
+                      View source
+                    </a>
+                  </>
+                )}
+              </p>
+
               <div className="dashboard-exercise-preview">
                 {workout.exercises.slice(0, 4).map((exercise, index) => (
                   <div
                     key={`${exercise.exerciseId || exercise._id || index}-${index}`}
                     className="dashboard-exercise-row"
                   >
-                    <span className="dashboard-exercise-name">{exercise.name}</span>
+                    <span className="dashboard-exercise-name">
+                      {exercise.name || "Exercise"}
+                    </span>
                     <div className="exercise-badges">
-                      <span className="badge badge-dark">{exercise.sets} sets</span>
-                      <span className="badge badge-light">{exercise.reps} reps</span>
+                      <span className="badge badge-dark">
+                        {exercise.sets ?? "-"} sets
+                      </span>
+                      <span className="badge badge-light">
+                        {exercise.reps ?? "-"} reps
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -143,11 +184,22 @@ export default function WorkoutDashboard({
           </div>
 
           <div className="dashboard-actions">
-            <button className="action-btn active" onClick={onGenerateBaseline}>
-              Generate Baseline
+            <button
+              type="button"
+              className="action-btn active"
+              onClick={handleBaselineClick}
+              disabled={loading}
+            >
+              {loading ? "Generating..." : "Generate Baseline"}
             </button>
-            <button className="action-btn" onClick={onGeneratePersonalised}>
-              Generate Personalised
+
+            <button
+              type="button"
+              className="action-btn"
+              onClick={handlePersonalisedClick}
+              disabled={loading}
+            >
+              {loading ? "Generating..." : "Generate Personalised"}
             </button>
           </div>
         </div>

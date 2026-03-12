@@ -48,6 +48,26 @@ const recommendationSchema = new mongoose.Schema(
       enum: ["lower_body"],
       default: "lower_body",
     },
+    title: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    sourceType: {
+      type: String,
+      enum: ["baseline", "recommender"],
+      default: "recommender",
+    },
+    sourceName: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    sourceUrl: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     exercises: {
       type: [recommendationExerciseSchema],
       required: true,
