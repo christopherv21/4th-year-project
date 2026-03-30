@@ -1,17 +1,17 @@
 import React, { useState } from "react";
 
 const WorkoutGenerator = () => {
-  const [workout, setWorkout] = useState(null);
+  const [options, setOptions] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const token = localStorage.getItem("token");
 
-  const generateWorkout = async (type) => {
+  const generateWorkout = async () => {
     setLoading(true);
 
     try {
       const res = await fetch(
-        `http://localhost:5000/api/recommendations/${type}`,
+        `http://localhost:5000/api/recommendations/personalised-options`,
         {
           method: "POST",
           headers: {
@@ -21,7 +21,7 @@ const WorkoutGenerator = () => {
       );
 
       const data = await res.json();
-      setWorkout(data);
+      setOptions(data.options || []);
     } catch (err) {
       console.error("Workout generation failed", err);
     }
@@ -31,32 +31,56 @@ const WorkoutGenerator = () => {
 
   return (
     <div style={{ marginTop: "30px" }}>
-      <h2>Generate Workout</h2>
+      <h2>Personalised Workout Generation</h2>
 
-      <button onClick={() => generateWorkout("baseline")}>
-        Generate Baseline Workout
+      <p style={{ marginBottom: "15px" }}>
+        Generate personalised lower-body workout options tailored to your fitness level,
+        goal, equipment, age, and injury status.
+      </p>
+
+      <button onClick={generateWorkout}>
+        {loading ? "Generating..." : "Generate Personalised Workout Options"}
       </button>
 
-      <button
-        style={{ marginLeft: "10px" }}
-        onClick={() => generateWorkout("personalised")}
-      >
-        Generate Personalised Workout
-      </button>
-
-      {loading && <p>Generating workout...</p>}
-
-      {workout && (
+      {options.length > 0 && (
         <div style={{ marginTop: "20px" }}>
-          <h3>{workout.workoutType.toUpperCase()} WORKOUT</h3>
+          <h3>Workout Options</h3>
 
-          <ul>
-            {workout.exercises.map((ex) => (
-              <li key={ex.exerciseId}>
-                {ex.name} — {ex.sets} sets × {ex.reps} reps
-              </li>
-            ))}
-          </ul>
+          {options.map((option, index) => (
+            <div
+              key={index}
+              style={{
+                marginBottom: "20px",
+                padding: "15px",
+                border: "1px solid #ddd",
+                borderRadius: "8px",
+              }}
+            >
+              <h4>{option.label}</h4>
+
+              <p>{option.description}</p>
+
+              {/* 🔥 A-GRADE EXPLANATION LINE */}
+              <p style={{ fontSize: "13px", color: "#666", marginTop: "6px" }}>
+                Generated using rule-based logic: tailored for your {option.goal} goal,
+                with {option.exercises.length} exercises selected based on your fitness level,
+                equipment, and constraints.
+              </p>
+
+              <p>
+                <strong>Prescription:</strong> {option.prescription.sets} sets ×{" "}
+                {option.prescription.reps} reps
+              </p>
+
+              <ul>
+                {option.exercises.map((ex, i) => (
+                  <li key={i}>
+                    {ex.name} — {ex.sets} sets × {ex.reps} reps
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
       )}
     </div>

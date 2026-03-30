@@ -55,7 +55,7 @@ export default function ExercisesList({ exercises = [] }) {
             )}
 
             {instructionUrl && (
-              <div className="exercise-link">
+              <div className="exercise-link" style={{ marginTop: "10px" }}>
                 <a href={instructionUrl} target="_blank" rel="noreferrer">
                   View exercise instructions
                 </a>

@@ -52,7 +52,7 @@ const percentage = (part, total) => {
   return roundToTwo((part / total) * 100);
 };
 
-const buildGroupSummary = (logs) => {
+const buildSummary = (logs) => {
   const totalLogs = logs.length;
   const completedCount = logs.filter((log) => log.completed === true).length;
 
@@ -86,43 +86,6 @@ const buildGroupSummary = (logs) => {
       too_easy: percentage(difficultyCounts.too_easy, totalLogs),
       too_hard: percentage(difficultyCounts.too_hard, totalLogs),
     },
-  };
-};
-
-const buildComparison = (personalisedSummary, baselineSummary) => {
-  const safeDiff = (a, b) => {
-    if (a === null || a === undefined || b === null || b === undefined) {
-      return null;
-    }
-
-    return roundToTwo(a - b);
-  };
-
-  return {
-    completionRateDifference: safeDiff(
-      personalisedSummary.completionRate,
-      baselineSummary.completionRate
-    ),
-    suitabilityDifference: safeDiff(
-      personalisedSummary.avgSuitability,
-      baselineSummary.avgSuitability
-    ),
-    structureDifference: safeDiff(
-      personalisedSummary.avgStructure,
-      baselineSummary.avgStructure
-    ),
-    enjoymentDifference: safeDiff(
-      personalisedSummary.avgEnjoyment,
-      baselineSummary.avgEnjoyment
-    ),
-    durationDifference: safeDiff(
-      personalisedSummary.avgDurationActual,
-      baselineSummary.avgDurationActual
-    ),
-    justRightDifference: safeDiff(
-      personalisedSummary.difficultyPercentages.just_right,
-      baselineSummary.difficultyPercentages.just_right
-    ),
   };
 };
 
@@ -171,10 +134,7 @@ const logWorkout = async (req, res) => {
       notes: typeof notes === "string" ? notes.trim() : "",
     };
 
-    if (
-      payload.durationActual !== null &&
-      payload.durationActual < 0
-    ) {
+    if (payload.durationActual !== null && payload.durationActual < 0) {
       return res.status(400).json({
         message: "durationActual must be a valid number of minutes",
       });
@@ -195,17 +155,13 @@ const logWorkout = async (req, res) => {
     ];
 
     for (const field of ratingFields) {
-      if (
-        field.value !== null &&
-        (field.value < 1 || field.value > 5)
-      ) {
+      if (field.value !== null && (field.value < 1 || field.value > 5)) {
         return res.status(400).json({
           message: `${field.key} must be between 1 and 5`,
         });
       }
     }
 
-    // Upsert so user can edit their feedback instead of creating duplicates
     const workoutLog = await WorkoutLog.findOneAndUpdate(
       { userId: req.userId, recommendationId },
       payload,
@@ -253,30 +209,16 @@ const getEvaluationSummary = async (req, res) => {
     const validLogs = logs.filter(
       (log) =>
         log.recommendationId &&
-        (log.recommendationId.workoutType === "baseline" ||
-          log.recommendationId.workoutType === "personalised")
+        log.recommendationId.workoutType === "personalised"
     );
 
-    const personalisedLogs = validLogs.filter(
-      (log) => log.recommendationId.workoutType === "personalised"
-    );
-
-    const baselineLogs = validLogs.filter(
-      (log) => log.recommendationId.workoutType === "baseline"
-    );
-
-    const personalisedSummary = buildGroupSummary(personalisedLogs);
-    const baselineSummary = buildGroupSummary(baselineLogs);
+    const summary = buildSummary(validLogs);
 
     const response = {
       overall: {
         totalLogs: validLogs.length,
-        personalisedCount: personalisedLogs.length,
-        baselineCount: baselineLogs.length,
       },
-      personalised: personalisedSummary,
-      baseline: baselineSummary,
-      comparison: buildComparison(personalisedSummary, baselineSummary),
+      personalised: summary,
     };
 
     return res.status(200).json(response);

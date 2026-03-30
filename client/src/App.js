@@ -42,7 +42,6 @@ function App() {
 
   const [loadingRec, setLoadingRec] = useState(false);
   const [selectingWorkout, setSelectingWorkout] = useState(false);
-  const [currentCondition, setCurrentCondition] = useState("");
 
   const [completed, setCompleted] = useState(false);
   const [suitabilityRating, setSuitabilityRating] = useState(5);
@@ -95,7 +94,6 @@ function App() {
     setRecommendedRec(null);
     setRecommendedExercises([]);
     setRecommendedOptions([]);
-    setCurrentCondition("");
 
     setLogs([]);
     setLoadingLogs(false);
@@ -233,6 +231,28 @@ function App() {
     loadEvaluationSummary();
   }, [token, refreshKey]);
 
+  useEffect(() => {
+    const loadLatestRecommendation = async () => {
+      if (!token) return;
+
+      try {
+        const data = await apiFetch("/api/recommendations", { token });
+
+        if (Array.isArray(data) && data.length > 0) {
+          const latest = data[0];
+          setRecommendedRec(latest);
+          setRecommendedExercises(
+            Array.isArray(latest.exercises) ? latest.exercises : []
+          );
+        }
+      } catch (err) {
+        console.error("Failed to load latest recommendation", err);
+      }
+    };
+
+    loadLatestRecommendation();
+  }, [token, refreshKey]);
+
   const resetRecommendationUi = () => {
     setRecommendedRec(null);
     setRecommendedExercises([]);
@@ -242,28 +262,17 @@ function App() {
     setRecError("");
   };
 
-  const generateRecommendation = async (condition = "personalised") => {
+  const generateRecommendation = async () => {
     try {
-      setCurrentCondition(condition);
       setLoadingRec(true);
       resetRecommendationUi();
 
-      const endpoint =
-        condition === "baseline"
-          ? "/api/recommendations/baseline"
-          : "/api/recommendations/personalised-options";
-
-      const rec = await apiFetch(endpoint, {
+      const rec = await apiFetch("/api/recommendations/personalised-options", {
         method: "POST",
         token,
       });
 
-      if (condition === "baseline") {
-        setRecommendedRec(rec);
-        setRecommendedExercises(Array.isArray(rec?.exercises) ? rec.exercises : []);
-      } else {
-        setRecommendedOptions(Array.isArray(rec?.options) ? rec.options : []);
-      }
+      setRecommendedOptions(Array.isArray(rec?.options) ? rec.options : []);
     } catch (err) {
       resetRecommendationUi();
       setRecError(err.message || "Failed to generate recommendation");
@@ -290,7 +299,9 @@ function App() {
 
       setRecommendedRec(savedRecommendation);
       setRecommendedExercises(
-        Array.isArray(savedRecommendation?.exercises) ? savedRecommendation.exercises : []
+        Array.isArray(savedRecommendation?.exercises)
+          ? savedRecommendation.exercises
+          : []
       );
       setRecommendedOptions([]);
     } catch (err) {
@@ -517,8 +528,8 @@ function App() {
         <div className="page-card">
           <h2 className="section-title">Performance & Evaluation Insights</h2>
           <p className="subtle-text" style={{ marginTop: 0 }}>
-            Review workout completion, ratings, and comparative recommendation
-            performance across your recorded sessions.
+            Review workout completion, ratings, and recommendation performance
+            across your recorded sessions.
           </p>
           <EvaluationResults refreshKey={refreshKey} token={token} />
         </div>
@@ -563,8 +574,7 @@ function App() {
             latestLog={latestLog}
             evaluationSummary={evaluationSummary}
             loading={loadingRec || selectingWorkout}
-            onGenerateBaseline={() => generateRecommendation("baseline")}
-            onGeneratePersonalised={() => generateRecommendation("personalised")}
+            onGeneratePersonalised={generateRecommendation}
           />
 
           <div className="dashboard-two-col">
@@ -573,46 +583,36 @@ function App() {
           </div>
 
           <div className="page-card">
-            <h2 className="section-title">
-              Workout Generation Centre{" "}
-              {currentCondition ? (
-                <span className="section-inline-tag">
-                  mode: <b>{currentCondition}</b>
-                </span>
-              ) : null}
-            </h2>
+            <h2 className="section-title">Personalised Workout Generation</h2>
+
+            <div style={{ marginBottom: "12px", fontSize: "13px", color: "#666" }}>
+              Example of a generic online workout plan used for comparison:
+              <ul style={{ marginTop: "6px", paddingLeft: "18px" }}>
+                <li>
+                  <a
+                    href="https://www.verywellfit.com/beginner-leg-day-workout-5323162"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Verywell Fit – Beginner Leg Day Workout
+                  </a>
+                </li>
+              </ul>
+            </div>
 
             <p className="subtle-text" style={{ marginTop: 0 }}>
-              Generate either a generic baseline workout or personalised lower-body
-              workout options tailored to your profile, training goal, equipment,
-              age, and injury status.
+              Generate personalised lower-body workout options tailored to your
+              profile, training goal, equipment, age, and injury status.
             </p>
 
             <div className="action-row">
               <button
                 type="button"
                 disabled={loadingRec || selectingWorkout}
-                aria-pressed={currentCondition === "baseline"}
-                onClick={() => generateRecommendation("baseline")}
-                className={`action-btn ${currentCondition === "baseline" ? "active" : ""}`}
+                onClick={generateRecommendation}
+                className="action-btn active"
               >
-                {loadingRec && currentCondition === "baseline"
-                  ? "Generating..."
-                  : "Generate Baseline Workout"}
-              </button>
-
-              <button
-                type="button"
-                disabled={loadingRec || selectingWorkout}
-                aria-pressed={currentCondition === "personalised"}
-                onClick={() => generateRecommendation("personalised")}
-                className={`action-btn ${
-                  currentCondition === "personalised" ? "active" : ""
-                }`}
-              >
-                {loadingRec && currentCondition === "personalised"
-                  ? "Generating..."
-                  : "Generate Personalised Workout Options"}
+                {loadingRec ? "Generating..." : "Generate Personalised Workout Options"}
               </button>
             </div>
 
@@ -626,12 +626,12 @@ function App() {
               recommendedOptions.length === 0 &&
               !recError && (
                 <div className="empty-state">
-                  No workout recommendation loaded yet. Use one of the generation
-                  buttons above to begin.
+                  No workout recommendation loaded yet. Generate personalised
+                  workout options to begin.
                 </div>
               )}
 
-            {currentCondition === "personalised" && recommendedOptions.length > 0 && (
+            {recommendedOptions.length > 0 && (
               <div className="personalised-options-grid">
                 {recommendedOptions.map((option, index) => (
                   <div
@@ -642,6 +642,41 @@ function App() {
                       <div>
                         <h3>{option.label}</h3>
                         <p className="option-description">{option.description}</p>
+
+                        <p
+                          style={{
+                            fontSize: "13px",
+                            color: "#666",
+                            marginTop: "6px",
+                          }}
+                        >
+                          {option.reason}
+                        </p>
+
+                        <div
+                          style={{
+                            marginTop: "6px",
+                            display: "flex",
+                            gap: "6px",
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          {profile?.age >= 50 && (
+                            <span className="badge badge-warning">
+                              Age-aware adjustment applied
+                            </span>
+                          )}
+
+                          {profile?.injury && profile.injury !== "none" && (
+                            <span className="badge badge-danger">
+                              Injury-aware filtering applied
+                            </span>
+                          )}
+
+                          <span className="badge badge-light">
+                            Goal-based structure
+                          </span>
+                        </div>
 
                         <div className="option-prescription">
                           <span className="option-prescription-label">

@@ -9,8 +9,8 @@ const workoutSchema = new mongoose.Schema(
     },
     workoutType: {
       type: String,
-      enum: ["baseline", "personalised"],
-      required: true,
+      enum: ["personalised"],
+      default: "personalised",
     },
     targetArea: {
       type: String,
@@ -20,17 +20,17 @@ const workoutSchema = new mongoose.Schema(
     title: {
       type: String,
       trim: true,
-      default: "",
+      default: "Personalised Lower-Body Workout",
     },
     sourceType: {
       type: String,
-      enum: ["baseline", "recommender"],
-      required: true,
+      enum: ["recommender"],
+      default: "recommender",
     },
     sourceName: {
       type: String,
       trim: true,
-      default: "",
+      default: "Rule-Based Recommendation Engine",
     },
     sourceUrl: {
       type: String,

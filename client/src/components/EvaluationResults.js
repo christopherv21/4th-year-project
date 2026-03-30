@@ -49,15 +49,34 @@ function EvaluationResults({ refreshKey, token }) {
 
   const totalLogs = summary?.overall?.totalLogs || 0;
   const personalised = summary?.personalised || null;
-  const baseline = summary?.baseline || null;
 
-  const overallCompletionRate =
-    totalLogs > 0 && personalised && baseline
-      ? Math.round(
-          (((personalised.completedCount || 0) + (baseline.completedCount || 0)) / totalLogs) *
-            100
-        )
-      : 0;
+  let systemInsight = "Not enough data yet to assess recommendation quality.";
+
+  if (totalLogs > 0) {
+    const completion = personalised?.completionRate ?? 0;
+    const suitability = personalised?.avgSuitability ?? null;
+    const enjoyment = personalised?.avgEnjoyment ?? null;
+    const justRight = personalised?.difficultyPercentages?.just_right ?? 0;
+
+    if (completion >= 80 && justRight >= 60) {
+      systemInsight =
+        "The recommendation rules are currently producing strong completion and difficulty-match results.";
+    } else if (completion >= 60) {
+      systemInsight =
+        "The recommendation rules are producing promising results, although more user feedback would help refine workout fit further.";
+    } else {
+      systemInsight =
+        "The recorded sessions suggest the recommendation rules may need further tuning to improve workout suitability.";
+    }
+
+    if (suitability !== null && suitability >= 4) {
+      systemInsight += " Suitability ratings are also trending positively.";
+    }
+
+    if (enjoyment !== null && enjoyment >= 4) {
+      systemInsight += " Enjoyment scores indicate a positive user response.";
+    }
+  }
 
   return (
     <div className="card">
@@ -83,80 +102,76 @@ function EvaluationResults({ refreshKey, token }) {
             </div>
 
             <div className="stat-card">
-              <span className="stat-label">Overall Completion</span>
-              <span className="stat-value">{overallCompletionRate}%</span>
+              <span className="stat-label">Completion Rate</span>
+              <span className="stat-value">
+                {fmt(personalised?.completionRate, "%")}
+              </span>
+            </div>
+
+            <div className="stat-card">
+              <span className="stat-label">Average Suitability</span>
+              <span className="stat-value">
+                {fmt(personalised?.avgSuitability)}
+              </span>
+            </div>
+
+            <div className="stat-card">
+              <span className="stat-label">Difficulty Match</span>
+              <span className="stat-value">
+                {fmt(personalised?.difficultyPercentages?.just_right, "%")}
+              </span>
             </div>
           </div>
 
-          <div className="comparison-grid">
-            <div className="summary-card">
-              <div className="summary-card-top">
-                <h3>Personalised Workouts</h3>
-                <span className="badge badge-dark">personalised</span>
-              </div>
-
-              <div className="summary-lines">
-                <p><strong>Total Logs:</strong> {personalised?.totalLogs ?? 0}</p>
-                <p><strong>Completion Rate:</strong> {fmt(personalised?.completionRate, "%")}</p>
-                <p><strong>Average Suitability:</strong> {fmt(personalised?.avgSuitability)}</p>
-                <p><strong>Average Structure:</strong> {fmt(personalised?.avgStructure)}</p>
-                <p><strong>Average Enjoyment:</strong> {fmt(personalised?.avgEnjoyment)}</p>
-                <p><strong>Average Duration:</strong> {fmt(personalised?.avgDurationActual, " min")}</p>
-              </div>
-
-              <div className="difficulty-box">
-                <h4>Difficulty Breakdown</h4>
-                {difficultyBadge(
-                  "Too Easy",
-                  `${personalised?.difficultyCounts?.too_easy ?? 0} (${personalised?.difficultyPercentages?.too_easy ?? 0}%)`,
-                  "warning"
-                )}
-                {difficultyBadge(
-                  "Just Right",
-                  `${personalised?.difficultyCounts?.just_right ?? 0} (${personalised?.difficultyPercentages?.just_right ?? 0}%)`,
-                  "success"
-                )}
-                {difficultyBadge(
-                  "Too Hard",
-                  `${personalised?.difficultyCounts?.too_hard ?? 0} (${personalised?.difficultyPercentages?.too_hard ?? 0}%)`,
-                  "danger"
-                )}
-              </div>
+          <div className="summary-card">
+            <div className="summary-card-top">
+              <h3>Personalised Workout Performance</h3>
+              <span className="badge badge-dark">personalised</span>
             </div>
 
-            <div className="summary-card">
-              <div className="summary-card-top">
-                <h3>Baseline Workouts</h3>
-                <span className="badge badge-outline">baseline</span>
-              </div>
+            <div className="summary-lines">
+              <p><strong>Total Logs:</strong> {personalised?.totalLogs ?? 0}</p>
+              <p><strong>Completed Sessions:</strong> {personalised?.completedCount ?? 0}</p>
+              <p><strong>Completion Rate:</strong> {fmt(personalised?.completionRate, "%")}</p>
+              <p><strong>Average Suitability:</strong> {fmt(personalised?.avgSuitability)}</p>
+              <p><strong>Average Structure:</strong> {fmt(personalised?.avgStructure)}</p>
+              <p><strong>Average Enjoyment:</strong> {fmt(personalised?.avgEnjoyment)}</p>
+              <p><strong>Average Duration:</strong> {fmt(personalised?.avgDurationActual, " min")}</p>
+            </div>
 
-              <div className="summary-lines">
-                <p><strong>Total Logs:</strong> {baseline?.totalLogs ?? 0}</p>
-                <p><strong>Completion Rate:</strong> {fmt(baseline?.completionRate, "%")}</p>
-                <p><strong>Average Suitability:</strong> {fmt(baseline?.avgSuitability)}</p>
-                <p><strong>Average Structure:</strong> {fmt(baseline?.avgStructure)}</p>
-                <p><strong>Average Enjoyment:</strong> {fmt(baseline?.avgEnjoyment)}</p>
-                <p><strong>Average Duration:</strong> {fmt(baseline?.avgDurationActual, " min")}</p>
-              </div>
+            <div className="difficulty-box">
+              <h4>Difficulty Breakdown</h4>
+              {difficultyBadge(
+                "Too Easy",
+                `${personalised?.difficultyCounts?.too_easy ?? 0} (${personalised?.difficultyPercentages?.too_easy ?? 0}%)`,
+                "warning"
+              )}
+              {difficultyBadge(
+                "Just Right",
+                `${personalised?.difficultyCounts?.just_right ?? 0} (${personalised?.difficultyPercentages?.just_right ?? 0}%)`,
+                "success"
+              )}
+              {difficultyBadge(
+                "Too Hard",
+                `${personalised?.difficultyCounts?.too_hard ?? 0} (${personalised?.difficultyPercentages?.too_hard ?? 0}%)`,
+                "danger"
+              )}
+            </div>
+          </div>
 
-              <div className="difficulty-box">
-                <h4>Difficulty Breakdown</h4>
-                {difficultyBadge(
-                  "Too Easy",
-                  `${baseline?.difficultyCounts?.too_easy ?? 0} (${baseline?.difficultyPercentages?.too_easy ?? 0}%)`,
-                  "warning"
-                )}
-                {difficultyBadge(
-                  "Just Right",
-                  `${baseline?.difficultyCounts?.just_right ?? 0} (${baseline?.difficultyPercentages?.just_right ?? 0}%)`,
-                  "success"
-                )}
-                {difficultyBadge(
-                  "Too Hard",
-                  `${baseline?.difficultyCounts?.too_hard ?? 0} (${baseline?.difficultyPercentages?.too_hard ?? 0}%)`,
-                  "danger"
-                )}
-              </div>
+          <div className="summary-card">
+            <div className="summary-card-top">
+              <h3>System Insight</h3>
+              <span className="badge badge-light">rule-based</span>
+            </div>
+
+            <div className="summary-lines">
+              <p>{systemInsight}</p>
+              <p>
+                <strong>Interpretation:</strong> These results summarise how well the
+                personalised recommendation logic is matching user needs based on
+                completion, suitability, enjoyment, structure, and perceived difficulty.
+              </p>
             </div>
           </div>
         </div>

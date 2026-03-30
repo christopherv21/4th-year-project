@@ -95,6 +95,7 @@ const uniquePush = (selected, exercise, seenIds) => {
   if (!exercise) return;
 
   const id = String(exercise._id);
+
   if (!seenIds.has(id)) {
     selected.push(exercise);
     seenIds.add(id);
@@ -155,11 +156,7 @@ const findByName = (
 // Decide if exercise should be excluded for safety / suitability
 const shouldExcludeExercise = (exercise, profile) => {
   const name = exercise.name.toLowerCase();
-  const {
-    injury = "none",
-    age = 18,
-    fitnessLevel = "beginner",
-  } = profile;
+  const { injury = "none", age = 18, fitnessLevel = "beginner" } = profile;
 
   const highImpactKeywords = ["jump", "plyo", "explosive"];
   const kneeSensitiveKeywords = [
@@ -214,6 +211,61 @@ const shouldExcludeExercise = (exercise, profile) => {
 // Return only safe exercises
 const getSafeExercises = (exercises, profile) => {
   return exercises.filter((exercise) => !shouldExcludeExercise(exercise, profile));
+};
+
+const getWorkoutLabel = (goal) => {
+  if (goal === "strength") return "Strength-Focused Lower Body";
+  if (goal === "hypertrophy") return "Muscle-Building Lower Body";
+  return "Endurance-Focused Lower Body";
+};
+
+const getWorkoutDescription = (goal) => {
+  if (goal === "strength") {
+    return "A lower-body workout focused on strength development using lower repetitions, controlled exercise selection, and a compound-first structure.";
+  }
+
+  if (goal === "hypertrophy") {
+    return "A lower-body workout focused on muscle growth using moderate repetitions, balanced exercise variety, and structured lower-body coverage.";
+  }
+
+  return "A lower-body workout focused on muscular endurance using higher repetitions, repeatable effort, and manageable lower-body training volume.";
+};
+
+const buildReasonText = ({ profile, goal, exerciseCount, selected }) => {
+  const parts = [];
+
+  parts.push(
+    `Generated for a ${profile.fitnessLevel} user with a ${goal} goal.`
+  );
+
+  parts.push(
+    `${exerciseCount} exercises were selected based on the user's available equipment (${profile.equipment}).`
+  );
+
+  if (profile.age >= 50) {
+    parts.push("Age-aware adjustments were applied to support safer volume and exercise selection.");
+  }
+
+  if (profile.injury && profile.injury !== "none") {
+    parts.push(
+      `Injury-aware filtering was applied to reduce exercises that may aggravate a ${profile.injury} issue.`
+    );
+  }
+
+  parts.push(
+    "The workout follows a rule-based structure that prioritises compound movements first, then balances posterior-chain, unilateral, isolation, and calf work where possible."
+  );
+
+  if (selected.length > 0) {
+    parts.push(
+      `Selected exercises include ${selected
+        .slice(0, 3)
+        .map((exercise) => exercise.name)
+        .join(", ")}${selected.length > 3 ? ", and others" : ""}.`
+    );
+  }
+
+  return parts.join(" ");
 };
 
 // Build one workout option by goal
@@ -371,20 +423,16 @@ const buildWorkoutByGoal = ({
   fillRemainingExercises(selected, allExercises, exerciseCount, seenIds, avoidIds);
 
   return {
-    label:
-      goal === "strength"
-        ? "Strength Option"
-        : goal === "hypertrophy"
-        ? "Hypertrophy Option"
-        : "Endurance Option",
-    description:
-      goal === "strength"
-        ? "A lower-body workout focused on strength development using lower reps and heavier training structure."
-        : goal === "hypertrophy"
-        ? "A lower-body workout focused on muscle growth using moderate reps and balanced training volume."
-        : "A lower-body workout focused on muscular endurance using higher reps and more repeatable effort.",
+    label: getWorkoutLabel(goal),
+    description: getWorkoutDescription(goal),
     goal,
     prescription: { sets, reps },
+    reason: buildReasonText({
+      profile,
+      goal,
+      exerciseCount,
+      selected: selected.slice(0, exerciseCount),
+    }),
     exercises: formatWorkoutExercises(selected.slice(0, exerciseCount), sets, reps),
   };
 };
@@ -422,118 +470,6 @@ const createWorkoutAndExercises = async ({
   );
 
   return workout;
-};
-
-// Generic baseline templates for comparison
-const getBaselineTemplate = (equipment) => {
-  const templates = {
-    gym: {
-      title: "Generic Online Lower-Body Gym Workout",
-      sourceName: "Generic Online Workout Comparator",
-      sourceUrl: "https://www.verywellfit.com/beginner-leg-day-workout-5323162",
-      items: [
-        { name: "Barbell Squat", sets: 3, reps: "8-10" },
-        { name: "Leg Press", sets: 3, reps: "10-12" },
-        { name: "Leg Curl", sets: 3, reps: "10-12" },
-        { name: "Seated Calf Raise", sets: 3, reps: "12-15" },
-      ],
-    },
-    dumbbells: {
-      title: "Generic Online Lower-Body Dumbbell Workout",
-      sourceName: "Generic Online Workout Comparator",
-      sourceUrl: "https://www.self.com/gallery/dumbbell-leg-workout",
-      items: [
-        { name: "Goblet Squat", sets: 3, reps: "10-12" },
-        { name: "Dumbbell Walking Lunge", sets: 3, reps: "10 each leg" },
-        { name: "Romanian Deadlift", sets: 3, reps: "10-12" },
-        { name: "Dumbbell Calf Raise", sets: 3, reps: "12-15" },
-      ],
-    },
-    bodyweight: {
-      title: "Generic Online Lower-Body Bodyweight Workout",
-      sourceName: "Generic Online Workout Comparator",
-      sourceUrl: "https://www.self.com/gallery/bodyweight-leg-exercises",
-      items: [
-        { name: "Bodyweight Squat", sets: 3, reps: "15" },
-        { name: "Walking Lunge", sets: 3, reps: "10 each leg" },
-        { name: "Glute Bridge", sets: 3, reps: "15" },
-        { name: "Standing Calf Raise", sets: 3, reps: "20" },
-      ],
-    },
-  };
-
-  return templates[equipment] || templates.bodyweight;
-};
-
-// Generate baseline workout
-const generateBaselineWorkout = async (req, res) => {
-  try {
-    const profile = await Profile.findOne({ userId: req.userId });
-
-    if (!profile) {
-      return res.status(404).json({
-        message: "Profile not found. Please complete your profile first.",
-      });
-    }
-
-    const baselineTemplate = getBaselineTemplate(profile.equipment);
-    const recommendationExercises = [];
-
-    for (let i = 0; i < baselineTemplate.items.length; i++) {
-      const templateExercise = baselineTemplate.items[i];
-
-      const matchedExercise = await Exercise.findOne({
-        name: templateExercise.name,
-        equipment: profile.equipment,
-      });
-
-      if (!matchedExercise) {
-        return res.status(400).json({
-          message: `Baseline exercise "${templateExercise.name}" was not found in the database for equipment type "${profile.equipment}".`,
-        });
-      }
-
-      recommendationExercises.push({
-        exerciseId: matchedExercise._id,
-        name: matchedExercise.name,
-        sets: templateExercise.sets,
-        reps: templateExercise.reps,
-        order: i + 1,
-      });
-    }
-
-    const recommendation = await Recommendation.create({
-      userId: req.userId,
-      workoutType: "baseline",
-      targetArea: "lower_body",
-      title: baselineTemplate.title,
-      sourceType: "baseline",
-      sourceName: baselineTemplate.sourceName,
-      sourceUrl: baselineTemplate.sourceUrl,
-      exercises: recommendationExercises,
-    });
-
-    const workout = await createWorkoutAndExercises({
-      userId: req.userId,
-      workoutType: "baseline",
-      title: baselineTemplate.title,
-      sourceType: "baseline",
-      sourceName: baselineTemplate.sourceName,
-      sourceUrl: baselineTemplate.sourceUrl,
-      recommendationExercises,
-    });
-
-    return res.status(201).json({
-      ...recommendation.toObject(),
-      workoutId: workout._id,
-      exercises: recommendationExercises,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      message: "Failed to generate baseline workout",
-      error: error.message,
-    });
-  }
 };
 
 // Generate 3 personalised options
@@ -588,7 +524,6 @@ const generatePersonalisedWorkoutOptions = async (req, res) => {
     );
     const calves = safeExercises.filter((exercise) => exercise.category === "calves");
 
-    // Put the user's chosen goal first
     const orderedGoals = [goal, "strength", "hypertrophy", "endurance"].filter(
       (value, index, arr) => arr.indexOf(value) === index
     );
@@ -701,7 +636,6 @@ const getMyRecommendations = async (req, res) => {
 };
 
 module.exports = {
-  generateBaselineWorkout,
   generatePersonalisedWorkoutOptions,
   createSelectedRecommendation,
   getMyRecommendations,
