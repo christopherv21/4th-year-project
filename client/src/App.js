@@ -221,7 +221,9 @@ function App() {
       if (!token) return;
 
       try {
-        const data = await apiFetch("/api/workout-logs/evaluation-summary", { token });
+        const data = await apiFetch("/api/workout-logs/evaluation-summary", {
+          token,
+        });
         setEvaluationSummary(data);
       } catch (err) {
         setEvaluationSummary(null);
@@ -277,11 +279,14 @@ function App() {
       setSubmitMsg("");
       setSubmitErr("");
 
-      const savedRecommendation = await apiFetch("/api/recommendations/personalised-select", {
-        method: "POST",
-        body: JSON.stringify({ selectedWorkout }),
-        token,
-      });
+      const savedRecommendation = await apiFetch(
+        "/api/recommendations/personalised-select",
+        {
+          method: "POST",
+          body: JSON.stringify({ selectedWorkout }),
+          token,
+        }
+      );
 
       setRecommendedRec(savedRecommendation);
       setRecommendedExercises(
@@ -350,60 +355,96 @@ function App() {
     Array.isArray(logs) && logs.length > 0
       ? [...logs].sort(
           (a, b) =>
-            new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt)
+            new Date(b.updatedAt || b.createdAt) -
+            new Date(a.updatedAt || a.createdAt)
         )[0]
       : null;
+
+  const heroProfileText = profile
+    ? `${profile.fitnessLevel} • ${profile.goal} • ${profile.equipment}`
+    : "Profile loading";
 
   if (!user) {
     return (
       <div className="login-shell">
-        <h1 className="login-title">Personalised Gym Workout System</h1>
-        <p className="subtle-text">Log in to generate and evaluate lower-body workouts.</p>
-
-        <form onSubmit={handleLogin} className="form-grid" style={{ marginTop: 20 }}>
-          <div className="form-group">
-            <label>Email or Username</label>
-            <input
-              type="text"
-              value={emailOrUsername}
-              onChange={(e) => setEmailOrUsername(e.target.value)}
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-
-          <button type="submit" className="primary-btn">
-            Login
-          </button>
-        </form>
-
-        {error && (
-          <p className="status-error" style={{ marginTop: 14 }}>
-            {error}
+        <div className="login-panel">
+          <div className="hero-badge">CV Fitness Recommendation Engine</div>
+          <h1 className="login-title">Adaptive Lower-Body Workout System</h1>
+          <p className="subtle-text">
+            Log in to generate profile-aware workouts based on fitness level,
+            training goal, equipment, age, and injury status.
           </p>
-        )}
 
-        <p className="subtle-text" style={{ marginTop: 18 }}>
-          Use an account created through Thunder Client or your register endpoint.
-        </p>
+          <form onSubmit={handleLogin} className="form-grid" style={{ marginTop: 20 }}>
+            <div className="form-group">
+              <label>Email or Username</label>
+              <input
+                type="text"
+                value={emailOrUsername}
+                onChange={(e) => setEmailOrUsername(e.target.value)}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+
+            <button type="submit" className="primary-btn">
+              Login
+            </button>
+          </form>
+
+          {error && (
+            <p className="status-error" style={{ marginTop: 14 }}>
+              {error}
+            </p>
+          )}
+
+          <p className="subtle-text" style={{ marginTop: 18 }}>
+            Use an account created through Thunder Client or your register endpoint.
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="app-shell">
-      <header className="app-header">
-        <div>
-          <h1 className="app-title">Personalised Gym Workout System</h1>
+      <header className="app-hero">
+        <div className="hero-left">
+          <div className="hero-badge">Adaptive Lower-Body Training Platform</div>
 
-          <div className="nav-tabs">
+          <h1 className="app-title">CV Fitness Recommendation System</h1>
+
+          <p className="hero-subtitle">
+            A personalised workout system that generates lower-body training
+            recommendations using user profile data, goal-based logic, and
+            constraint-aware adaptation.
+          </p>
+
+          <div className="hero-stats">
+            <div className="hero-stat-card">
+              <span className="hero-stat-label">Current Profile</span>
+              <strong>{heroProfileText}</strong>
+            </div>
+
+            <div className="hero-stat-card">
+              <span className="hero-stat-label">Recommendation Mode</span>
+              <strong>Rule-Based</strong>
+            </div>
+
+            <div className="hero-stat-card">
+              <span className="hero-stat-label">Constraint Awareness</span>
+              <strong>Age + Injury</strong>
+            </div>
+          </div>
+
+          <div className="nav-tabs hero-tabs">
             <button
               type="button"
               onClick={() => setPage("dashboard")}
@@ -430,21 +471,25 @@ function App() {
           </div>
         </div>
 
-        <div className="top-right">
-          <span className="user-chip">👤 {user.username}</span>
-          <button
-            type="button"
-            onClick={() => {
-              setPage("dashboard");
-              setEditingProfile((prev) => !prev);
-            }}
-            className="secondary-btn"
-          >
-            {editingProfile ? "Close Profile" : "Edit Profile"}
-          </button>
-          <button type="button" onClick={handleLogout} className="logout-btn">
-            Logout
-          </button>
+        <div className="hero-right">
+          <div className="user-panel">
+            <span className="user-chip">👤 {user.username}</span>
+
+            <button
+              type="button"
+              onClick={() => {
+                setPage("dashboard");
+                setEditingProfile((prev) => !prev);
+              }}
+              className="secondary-btn"
+            >
+              {editingProfile ? "Close Profile" : "Edit Profile"}
+            </button>
+
+            <button type="button" onClick={handleLogout} className="logout-btn">
+              Logout
+            </button>
+          </div>
         </div>
       </header>
 
@@ -470,10 +515,10 @@ function App() {
         </div>
       ) : page === "progress" ? (
         <div className="page-card">
-          <h2 className="section-title">Progress & Insights</h2>
+          <h2 className="section-title">Performance & Evaluation Insights</h2>
           <p className="subtle-text" style={{ marginTop: 0 }}>
-            Track workout completion, ratings, and how your personalised recommendations are
-            performing over time.
+            Review workout completion, ratings, and comparative recommendation
+            performance across your recorded sessions.
           </p>
           <EvaluationResults refreshKey={refreshKey} token={token} />
         </div>
@@ -481,18 +526,12 @@ function App() {
         <>
           {editingProfile && (
             <div className="page-card">
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: 12,
-                  flexWrap: "wrap",
-                }}
-              >
+              <div className="profile-edit-top">
                 <div>
-                  👤 <b>Profile:</b> {profile?.fitnessLevel} | {profile?.goal} |{" "}
+                  👤 <b>Current Profile:</b> {profile?.fitnessLevel} | {profile?.goal} |{" "}
                   {profile?.equipment}
+                  {profile?.age ? ` | age ${profile.age}` : ""}
+                  {profile?.injury ? ` | injury ${profile.injury}` : ""}
                 </div>
 
                 <button
@@ -535,18 +574,18 @@ function App() {
 
           <div className="page-card">
             <h2 className="section-title">
-              Choose Your Workout Goal{" "}
+              Workout Generation Centre{" "}
               {currentCondition ? (
-                <span style={{ fontSize: "1rem", fontWeight: 500 }}>
-                  (type: <b>{currentCondition}</b>)
+                <span className="section-inline-tag">
+                  mode: <b>{currentCondition}</b>
                 </span>
               ) : null}
             </h2>
 
             <p className="subtle-text" style={{ marginTop: 0 }}>
-              Choose your lower-body workout goal. The system will generate personalised
-              strength, hypertrophy, and endurance options based on your profile and available
-              equipment.
+              Generate either a generic baseline workout or personalised lower-body
+              workout options tailored to your profile, training goal, equipment,
+              age, and injury status.
             </p>
 
             <div className="action-row">
@@ -567,11 +606,13 @@ function App() {
                 disabled={loadingRec || selectingWorkout}
                 aria-pressed={currentCondition === "personalised"}
                 onClick={() => generateRecommendation("personalised")}
-                className={`action-btn ${currentCondition === "personalised" ? "active" : ""}`}
+                className={`action-btn ${
+                  currentCondition === "personalised" ? "active" : ""
+                }`}
               >
                 {loadingRec && currentCondition === "personalised"
                   ? "Generating..."
-                  : "Generate Goal-Based Workout Options"}
+                  : "Generate Personalised Workout Options"}
               </button>
             </div>
 
@@ -585,7 +626,8 @@ function App() {
               recommendedOptions.length === 0 &&
               !recError && (
                 <div className="empty-state">
-                  No recommendation loaded yet — click one of the buttons above.
+                  No workout recommendation loaded yet. Use one of the generation
+                  buttons above to begin.
                 </div>
               )}
 
@@ -599,11 +641,12 @@ function App() {
                     <div className="personalised-option-top">
                       <div>
                         <h3>{option.label}</h3>
-
                         <p className="option-description">{option.description}</p>
 
                         <div className="option-prescription">
-                          <span className="option-prescription-label">Prescription:</span>
+                          <span className="option-prescription-label">
+                            Prescription:
+                          </span>
                           <span>
                             {option.prescription?.sets ?? "-"} sets ×{" "}
                             {option.prescription?.reps ?? "-"} reps
@@ -646,7 +689,7 @@ function App() {
                 </div>
 
                 <div className="page-card" style={{ marginTop: 18, marginBottom: 0 }}>
-                  <h3 style={{ marginTop: 0 }}>Workout Feedback</h3>
+                  <h3 style={{ marginTop: 0 }}>Workout Evaluation Submission</h3>
 
                   <div className="feedback-grid">
                     <label className="inline-field">
@@ -741,7 +784,7 @@ function App() {
                     disabled={submitting}
                     className="primary-btn"
                   >
-                    {submitting ? "Saving..." : "Submit Feedback"}
+                    {submitting ? "Saving..." : "Submit Evaluation"}
                   </button>
 
                   {submitMsg && (
@@ -760,9 +803,10 @@ function App() {
           </div>
 
           <div className="page-card">
-            <h2 className="section-title">System Dataset</h2>
+            <h2 className="section-title">Exercise Knowledge Base</h2>
             <p className="subtle-text" style={{ marginTop: 0 }}>
-              Exercises stored in the database and used by the recommendation algorithm.
+              Exercise records currently stored in the system and used by the
+              recommendation engine.
             </p>
 
             {loadingExercises && <p>Loading exercises...</p>}

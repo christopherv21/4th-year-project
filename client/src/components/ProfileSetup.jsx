@@ -5,9 +5,16 @@ const defaultProfile = {
   fitnessLevel: "beginner",
   goal: "hypertrophy",
   equipment: "gym",
+  age: 18,
+  injury: "none",
 };
 
-function ProfileSetup({ token: tokenProp, mode = "create", existingProfile = null, onSaved }) {
+function ProfileSetup({
+  token: tokenProp,
+  mode = "create",
+  existingProfile = null,
+  onSaved,
+}) {
   const [formData, setFormData] = useState(defaultProfile);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -16,11 +23,18 @@ function ProfileSetup({ token: tokenProp, mode = "create", existingProfile = nul
   const token = tokenProp || localStorage.getItem("token");
 
   useEffect(() => {
+    if (!token) {
+      setError("No token found. Please log in again.");
+      return;
+    }
+
     if (existingProfile) {
       setFormData({
         fitnessLevel: existingProfile.fitnessLevel || "beginner",
         goal: existingProfile.goal || "hypertrophy",
         equipment: existingProfile.equipment || "gym",
+        age: existingProfile.age ?? 18,
+        injury: existingProfile.injury || "none",
       });
       return;
     }
@@ -38,22 +52,27 @@ function ProfileSetup({ token: tokenProp, mode = "create", existingProfile = nul
             fitnessLevel: res.data.fitnessLevel || "beginner",
             goal: res.data.goal || "hypertrophy",
             equipment: res.data.equipment || "gym",
+            age: res.data.age ?? 18,
+            injury: res.data.injury || "none",
           });
         }
       } catch (err) {
-        // No profile yet is fine
+        if (err.response?.status === 401) {
+          setError("Session expired. Please log in again.");
+          localStorage.removeItem("token");
+        }
       }
     };
 
-    if (token) {
-      fetchProfile();
-    }
+    fetchProfile();
   }, [token, existingProfile]);
 
   const handleChange = (e) => {
+    const { name, value } = e.target;
+
     setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      [name]: name === "age" ? Number(value) : value,
     }));
   };
 
@@ -63,17 +82,35 @@ function ProfileSetup({ token: tokenProp, mode = "create", existingProfile = nul
     setMessage("");
     setError("");
 
+    if (!token) {
+      setError("No token found. Please log in again.");
+      setLoading(false);
+      return;
+    }
+
     try {
-      const res = await axios.post("http://localhost:5000/api/profile", formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const payload = {
+        ...formData,
+        age: Number(formData.age),
+      };
+
+      const res = await axios.post(
+        "http://localhost:5000/api/profile",
+        payload,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       const savedProfile = {
         fitnessLevel: res.data.fitnessLevel,
         goal: res.data.goal,
         equipment: res.data.equipment,
+        age: res.data.age,
+        injury: res.data.injury,
       };
 
       setFormData(savedProfile);
@@ -83,7 +120,12 @@ function ProfileSetup({ token: tokenProp, mode = "create", existingProfile = nul
         onSaved(savedProfile);
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to save profile.");
+      if (err.response?.status === 401) {
+        setError("Invalid or expired token. Please log in again.");
+        localStorage.removeItem("token");
+      } else {
+        setError(err.response?.data?.message || "Failed to save profile.");
+      }
     } finally {
       setLoading(false);
     }
@@ -139,6 +181,33 @@ function ProfileSetup({ token: tokenProp, mode = "create", existingProfile = nul
             <option value="gym">Gym</option>
             <option value="dumbbells">Dumbbells</option>
             <option value="bodyweight">Bodyweight</option>
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="age">Age</label>
+          <input
+            id="age"
+            name="age"
+            type="number"
+            min="16"
+            max="100"
+            value={formData.age}
+            onChange={handleChange}
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="injury">Injury</label>
+          <select
+            id="injury"
+            name="injury"
+            value={formData.injury}
+            onChange={handleChange}
+          >
+            <option value="none">None</option>
+            <option value="knee">Knee</option>
+            <option value="back">Back</option>
           </select>
         </div>
 

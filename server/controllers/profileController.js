@@ -2,11 +2,19 @@ const Profile = require("../models/Profile");
 
 const upsertProfile = async (req, res) => {
   try {
-    const { fitnessLevel, goal, equipment } = req.body;
+    const { fitnessLevel, goal, equipment, age, injury } = req.body;
 
-    if (!fitnessLevel || !goal || !equipment) {
+    if (!fitnessLevel || !goal || !equipment || age === undefined || age === null) {
       return res.status(400).json({
-        message: "fitnessLevel, goal, and equipment are required",
+        message: "fitnessLevel, goal, equipment, and age are required",
+      });
+    }
+
+    const parsedAge = Number(age);
+
+    if (Number.isNaN(parsedAge)) {
+      return res.status(400).json({
+        message: "age must be a valid number",
       });
     }
 
@@ -17,6 +25,8 @@ const upsertProfile = async (req, res) => {
         fitnessLevel,
         goal,
         equipment,
+        age: parsedAge,
+        injury: injury || "none",
       },
       {
         new: true,

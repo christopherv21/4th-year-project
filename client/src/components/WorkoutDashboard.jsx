@@ -78,86 +78,147 @@ export default function WorkoutDashboard({
   const personalisedCompletion = personalised?.completionRate ?? 0;
   const baselineCompletion = baseline?.completionRate ?? 0;
 
-  let recommendationText = "Not enough data yet";
+  let recommendationText = "Not enough evaluation data yet.";
   if (totalLogs > 0) {
     if (personalisedCompletion > baselineCompletion) {
-      recommendationText = "Personalised workouts are currently performing better than baseline.";
+      recommendationText =
+        "Personalised workouts are currently outperforming the baseline based on logged completion results.";
     } else if (baselineCompletion > personalisedCompletion) {
-      recommendationText = "Baseline workouts are currently performing better than personalised.";
+      recommendationText =
+        "Baseline workouts are currently outperforming personalised workouts based on logged completion results.";
     } else {
-      recommendationText = "Personalised and baseline workouts are currently performing equally.";
+      recommendationText =
+        "Personalised and baseline workouts are currently performing at the same level.";
     }
   }
 
   return (
     <div className="page-card">
-      <div className="section-header">
-        <h2>🏋️ Workout Dashboard</h2>
-      </div>
+      <div className="dashboard-hero-panel">
+        <div className="dashboard-hero-top">
+          <div>
+            <div className="hero-badge" style={{ marginBottom: 12 }}>
+              Workout Control Centre
+            </div>
+            <h2 className="section-title" style={{ marginBottom: 8 }}>
+              Lower-Body Training Dashboard
+            </h2>
+            <p className="subtle-text" style={{ marginTop: 0, marginBottom: 0 }}>
+              Monitor your current workout, generate baseline and personalised plans,
+              and track recommendation performance over time.
+            </p>
+          </div>
 
-      <div className="dashboard-stats-grid">
-        <div className="dashboard-stat-card">
-          <span className="dashboard-stat-label">Today's Workout</span>
-          <div className="dashboard-stat-row">
-            <span className={badgeClass}>{displayWorkoutType}</span>
+          <div className="dashboard-actions">
+            <button
+              type="button"
+              className="primary-btn"
+              onClick={handlePersonalisedClick}
+              disabled={loading}
+            >
+              {loading ? "Generating..." : "Generate Personalised"}
+            </button>
+
+            <button
+              type="button"
+              className="action-btn"
+              onClick={handleBaselineClick}
+              disabled={loading}
+            >
+              {loading ? "Generating..." : "Generate Baseline"}
+            </button>
           </div>
         </div>
 
-        <div className="dashboard-stat-card">
-          <span className="dashboard-stat-label">Exercises</span>
-          <span className="dashboard-stat-value">{exerciseCount}</span>
-        </div>
+        <div className="dashboard-stats-grid">
+          <div className="dashboard-stat-card">
+            <span className="dashboard-stat-label">Current Workout Type</span>
+            <div className="dashboard-stat-row">
+              <span className={badgeClass}>{displayWorkoutType}</span>
+            </div>
+          </div>
 
-        <div className="dashboard-stat-card">
-          <span className="dashboard-stat-label">Estimated Duration</span>
-          <span className="dashboard-stat-value">{estimatedDuration}</span>
-        </div>
+          <div className="dashboard-stat-card">
+            <span className="dashboard-stat-label">Exercise Count</span>
+            <span className="dashboard-stat-value">{exerciseCount}</span>
+          </div>
 
-        <div className="dashboard-stat-card">
-          <span className="dashboard-stat-label">Last Completion</span>
-          <span className="dashboard-stat-value small">{completedText}</span>
+          <div className="dashboard-stat-card">
+            <span className="dashboard-stat-label">Estimated Duration</span>
+            <span className="dashboard-stat-value">{estimatedDuration}</span>
+          </div>
+
+          <div className="dashboard-stat-card">
+            <span className="dashboard-stat-label">Latest Completion</span>
+            <span className="dashboard-stat-value small">{completedText}</span>
+          </div>
         </div>
       </div>
 
-      <div className="dashboard-main-grid">
-        <div className="dashboard-panel">
+      <div className="dashboard-main-grid" style={{ marginTop: 20 }}>
+        <div className="dashboard-panel dashboard-primary-panel">
           <div className="dashboard-panel-top">
-            <h3>Today's Plan</h3>
+            <div>
+              <h3>Current Workout Plan</h3>
+              <p className="subtle-text" style={{ margin: "8px 0 0 0" }}>
+                Active lower-body recommendation currently loaded in the system.
+              </p>
+            </div>
             <span className={badgeClass}>{displayWorkoutType}</span>
           </div>
 
           {!workout?.exercises?.length ? (
             <div className="empty-state">
-              <p>No workout generated yet.</p>
+              <p style={{ marginTop: 0, marginBottom: 6, fontWeight: 700 }}>
+                No workout generated yet.
+              </p>
+              <p style={{ margin: 0 }}>
+                Start by generating either a baseline workout or a personalised
+                workout option.
+              </p>
             </div>
           ) : (
             <>
-              <p className="subtle-text">
-                Your current workout contains <strong>{exerciseCount}</strong> exercises.
-              </p>
+              <div className="dashboard-plan-meta">
+                <div className="dashboard-plan-meta-item">
+                  <span className="dashboard-info-label">Exercises</span>
+                  <span className="dashboard-info-value">{exerciseCount}</span>
+                </div>
 
-              <p className="subtle-text" style={{ marginTop: 8 }}>
-                <strong>Source:</strong> {sourceName}
-                {sourceUrl && (
-                  <>
-                    {" "}
-                    •{" "}
-                    <a href={sourceUrl} target="_blank" rel="noreferrer">
-                      View source
-                    </a>
-                  </>
-                )}
-              </p>
+                <div className="dashboard-plan-meta-item">
+                  <span className="dashboard-info-label">Estimated Time</span>
+                  <span className="dashboard-info-value">{estimatedDuration}</span>
+                </div>
+
+                <div className="dashboard-plan-meta-item">
+                  <span className="dashboard-info-label">Source</span>
+                  <span className="dashboard-info-value">{sourceName}</span>
+                </div>
+              </div>
+
+              {sourceUrl && (
+                <p className="subtle-text" style={{ marginTop: 14 }}>
+                  <a href={sourceUrl} target="_blank" rel="noreferrer">
+                    View workout source
+                  </a>
+                </p>
+              )}
 
               <div className="dashboard-exercise-preview">
-                {workout.exercises.slice(0, 4).map((exercise, index) => (
+                {workout.exercises.map((exercise, index) => (
                   <div
                     key={`${exercise.exerciseId || exercise._id || index}-${index}`}
                     className="dashboard-exercise-row"
                   >
-                    <span className="dashboard-exercise-name">
-                      {exercise.name || "Exercise"}
-                    </span>
+                    <div>
+                      <div className="dashboard-exercise-index">
+                        Exercise {index + 1}
+                      </div>
+                      <span className="dashboard-exercise-name">
+                        {exercise.name || "Exercise"}
+                      </span>
+                    </div>
+
                     <div className="exercise-badges">
                       <span className="badge badge-dark">
                         {exercise.sets ?? "-"} sets
@@ -169,19 +230,18 @@ export default function WorkoutDashboard({
                   </div>
                 ))}
               </div>
-
-              {workout.exercises.length > 4 && (
-                <p className="subtle-text" style={{ marginTop: 12 }}>
-                  + {workout.exercises.length - 4} more exercises in this workout
-                </p>
-              )}
             </>
           )}
         </div>
 
         <div className="dashboard-panel">
           <div className="dashboard-panel-top">
-            <h3>Quick Insights</h3>
+            <div>
+              <h3>Session Insights</h3>
+              <p className="subtle-text" style={{ margin: "8px 0 0 0" }}>
+                Most recent workout feedback and user-response metrics.
+              </p>
+            </div>
           </div>
 
           <div className="dashboard-info-list">
@@ -222,38 +282,29 @@ export default function WorkoutDashboard({
               </span>
             </div>
           </div>
-
-          <div className="dashboard-actions">
-            <button
-              type="button"
-              className="action-btn active"
-              onClick={handleBaselineClick}
-              disabled={loading}
-            >
-              {loading ? "Generating..." : "Generate Baseline"}
-            </button>
-
-            <button
-              type="button"
-              className="action-btn"
-              onClick={handlePersonalisedClick}
-              disabled={loading}
-            >
-              {loading ? "Generating..." : "Generate Personalised"}
-            </button>
-          </div>
         </div>
       </div>
 
       <div className="dashboard-panel dashboard-eval-summary" style={{ marginTop: 20 }}>
         <div className="dashboard-panel-top">
-          <h3>Evaluation Summary</h3>
+          <div>
+            <h3>Recommendation Evaluation Summary</h3>
+            <p className="subtle-text" style={{ margin: "8px 0 0 0" }}>
+              Comparative overview of baseline and personalised workout performance.
+            </p>
+          </div>
           <span className="badge badge-light">{totalLogs} logs</span>
         </div>
 
         {totalLogs === 0 ? (
           <div className="empty-state">
-            <p>No evaluation data yet. Log baseline and personalised workouts to compare results.</p>
+            <p style={{ marginTop: 0, marginBottom: 6, fontWeight: 700 }}>
+              No evaluation data recorded yet.
+            </p>
+            <p style={{ margin: 0 }}>
+              Submit workout evaluations to compare baseline and personalised
+              recommendation performance.
+            </p>
           </div>
         ) : (
           <>
@@ -273,14 +324,18 @@ export default function WorkoutDashboard({
               </div>
 
               <div className="dashboard-stat-card">
-                <span className="dashboard-stat-label">Personalised Avg Suitability</span>
+                <span className="dashboard-stat-label">
+                  Personalised Avg Suitability
+                </span>
                 <span className="dashboard-stat-value">
                   {formatMetric(personalised?.avgSuitability)}
                 </span>
               </div>
 
               <div className="dashboard-stat-card">
-                <span className="dashboard-stat-label">Baseline Avg Suitability</span>
+                <span className="dashboard-stat-label">
+                  Baseline Avg Suitability
+                </span>
                 <span className="dashboard-stat-value">
                   {formatMetric(baseline?.avgSuitability)}
                 </span>
@@ -289,12 +344,14 @@ export default function WorkoutDashboard({
 
             <div className="dashboard-info-list" style={{ marginTop: 18 }}>
               <div className="insight-highlight">
-            Current Insight: {recommendationText}
-            </div>
+                Current Insight: {recommendationText}
+              </div>
 
               <div className="dashboard-info-item">
                 <span className="dashboard-info-label">Personalised Logs</span>
-                <span className="dashboard-info-value">{personalised?.totalLogs ?? 0}</span>
+                <span className="dashboard-info-value">
+                  {personalised?.totalLogs ?? 0}
+                </span>
               </div>
 
               <div className="dashboard-info-item">
@@ -303,14 +360,18 @@ export default function WorkoutDashboard({
               </div>
 
               <div className="dashboard-info-item">
-                <span className="dashboard-info-label">Difficulty Match (Personalised)</span>
+                <span className="dashboard-info-label">
+                  Difficulty Match (Personalised)
+                </span>
                 <span className="dashboard-info-value">
                   {formatMetric(personalised?.difficultyPercentages?.just_right, "%")}
                 </span>
               </div>
 
               <div className="dashboard-info-item">
-                <span className="dashboard-info-label">Difficulty Match (Baseline)</span>
+                <span className="dashboard-info-label">
+                  Difficulty Match (Baseline)
+                </span>
                 <span className="dashboard-info-value">
                   {formatMetric(baseline?.difficultyPercentages?.just_right, "%")}
                 </span>

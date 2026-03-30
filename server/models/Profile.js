@@ -23,6 +23,17 @@ const profileSchema = new mongoose.Schema(
       enum: ["gym", "dumbbells", "bodyweight"],
       required: true,
     },
+    age: {
+      type: Number,
+      required: true,
+      min: 16,
+      max: 100,
+    },
+    injury: {
+      type: String,
+      enum: ["none", "knee", "back"],
+      default: "none",
+    },
   },
   { timestamps: true }
 );
