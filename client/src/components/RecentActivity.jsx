@@ -7,6 +7,13 @@ const formatDifficultyLabel = (value) => {
   return "-";
 };
 
+const formatWorkoutType = (value) => {
+  if (!value) return "-";
+  if (value === "personalised") return "Personalised";
+  if (value === "baseline") return "Online Workout";
+  return value;
+};
+
 export default function RecentActivity({ latestLog }) {
   const recommendation = latestLog?.recommendationId;
 
@@ -20,6 +27,8 @@ export default function RecentActivity({ latestLog }) {
   const difficulty = latestLog?.difficultyFeedback || "-";
   const suitability = latestLog?.suitabilityRating ?? "-";
   const structure = latestLog?.structureRating ?? "-";
+  const enjoyment = latestLog?.enjoymentRating ?? "-";
+  const duration = latestLog?.durationActual ?? "-";
 
   const date = latestLog?.createdAt
     ? new Date(latestLog.createdAt).toLocaleString()
@@ -42,44 +51,36 @@ export default function RecentActivity({ latestLog }) {
       : "badge badge-light";
 
   return (
-    <div className="page-card">
-      <div className="section-header">
-        <div>
-          <h2>🕒 Recent Session</h2>
-          <p className="subtle-text" style={{ margin: "8px 0 0 0" }}>
-            Summary of your most recent logged workout and performance metrics.
-          </p>
-        </div>
-      </div>
-
+    <div>
       {!latestLog ? (
         <div className="empty-state">
           <p style={{ marginTop: 0, marginBottom: 6, fontWeight: 700 }}>
             No workout activity recorded yet.
           </p>
           <p style={{ margin: 0 }}>
-            Complete and submit a workout to generate your first performance summary.
+            Complete and submit a workout to generate your first performance
+            summary.
           </p>
         </div>
       ) : (
         <>
-          {/* TOP HIGHLIGHT */}
           <div className="activity-highlight">
             <div className="activity-highlight-top">
               <span className="activity-highlight-label">Latest Workout</span>
-              <span className={workoutBadgeClass}>{workoutType}</span>
+              <span className={workoutBadgeClass}>
+                {formatWorkoutType(workoutType)}
+              </span>
             </div>
 
             <h3 className="activity-highlight-title">{completed}</h3>
 
             <p className="activity-highlight-text">
               {completed === "Completed"
-                ? "Workout successfully completed and logged."
-                : "Workout was not completed or partially completed."}
+                ? "Your most recent session was completed and recorded successfully."
+                : "Your most recent session was logged but not completed."}
             </p>
           </div>
 
-          {/* DETAILS */}
           <div className="snapshot-grid" style={{ marginTop: 16 }}>
             <div className="snapshot-item">
               <span className="snapshot-label">Difficulty Feedback</span>
@@ -89,13 +90,25 @@ export default function RecentActivity({ latestLog }) {
             </div>
 
             <div className="snapshot-item">
-              <span className="snapshot-label">Suitability Rating</span>
-              <span className="snapshot-value">{suitability}</span>
+              <span className="snapshot-label">Suitability</span>
+              <span className="snapshot-value">{suitability} / 5</span>
             </div>
 
             <div className="snapshot-item">
-              <span className="snapshot-label">Structure Rating</span>
-              <span className="snapshot-value">{structure}</span>
+              <span className="snapshot-label">Structure</span>
+              <span className="snapshot-value">{structure} / 5</span>
+            </div>
+
+            <div className="snapshot-item">
+              <span className="snapshot-label">Enjoyment</span>
+              <span className="snapshot-value">{enjoyment} / 5</span>
+            </div>
+
+            <div className="snapshot-item">
+              <span className="snapshot-label">Duration</span>
+              <span className="snapshot-value">
+                {duration === "-" ? "-" : `${duration} min`}
+              </span>
             </div>
 
             <div className="snapshot-item snapshot-item-wide">

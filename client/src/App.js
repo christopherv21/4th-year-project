@@ -273,6 +273,7 @@ function App() {
       });
 
       setRecommendedOptions(Array.isArray(rec?.options) ? rec.options : []);
+      setPage("dashboard");
     } catch (err) {
       resetRecommendationUi();
       setRecError(err.message || "Failed to generate recommendation");
@@ -377,36 +378,37 @@ function App() {
 
   if (!user) {
     return (
-      <div className="login-shell">
-        <div className="login-panel">
-          <div className="hero-badge">CV Fitness Recommendation Engine</div>
-          <h1 className="login-title">Adaptive Lower-Body Workout System</h1>
-          <p className="subtle-text">
-            Log in to generate profile-aware workouts based on fitness level,
-            training goal, equipment, age, and injury status.
+      <div className="auth-shell">
+        <div className="auth-background"></div>
+
+        <div className="auth-card">
+          <div className="brand-mark">CV</div>
+          <p className="eyebrow">Personalised Fitness Platform</p>
+          <h1>CV Fitness</h1>
+          <p className="auth-subtext">
+            Log in to generate profile-aware lower-body workouts using goal-based
+            logic, user constraints, and personalised recommendations.
           </p>
 
-          <form onSubmit={handleLogin} className="form-grid" style={{ marginTop: 20 }}>
-            <div className="form-group">
-              <label>Email or Username</label>
-              <input
-                type="text"
-                value={emailOrUsername}
-                onChange={(e) => setEmailOrUsername(e.target.value)}
-              />
-            </div>
+          <form onSubmit={handleLogin} className="auth-form">
+            <label>Email or Username</label>
+            <input
+              type="text"
+              value={emailOrUsername}
+              onChange={(e) => setEmailOrUsername(e.target.value)}
+              placeholder="Enter your email or username"
+            />
 
-            <div className="form-group">
-              <label>Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
+            <label>Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+            />
 
-            <button type="submit" className="primary-btn">
-              Login
+            <button type="submit" className="btn btn-primary btn-full">
+              Sign In
             </button>
           </form>
 
@@ -416,7 +418,7 @@ function App() {
             </p>
           )}
 
-          <p className="subtle-text" style={{ marginTop: 18 }}>
+          <p className="auth-subtext" style={{ marginTop: 18, marginBottom: 0 }}>
             Use an account created through Thunder Client or your register endpoint.
           </p>
         </div>
@@ -426,135 +428,478 @@ function App() {
 
   return (
     <div className="app-shell">
-      <header className="app-hero">
-        <div className="hero-left">
-          <div className="hero-badge">Adaptive Lower-Body Training Platform</div>
-
-          <h1 className="app-title">CV Fitness Recommendation System</h1>
-
-          <p className="hero-subtitle">
-            A personalised workout system that generates lower-body training
-            recommendations using user profile data, goal-based logic, and
-            constraint-aware adaptation.
-          </p>
-
-          <div className="hero-stats">
-            <div className="hero-stat-card">
-              <span className="hero-stat-label">Current Profile</span>
-              <strong>{heroProfileText}</strong>
-            </div>
-
-            <div className="hero-stat-card">
-              <span className="hero-stat-label">Recommendation Mode</span>
-              <strong>Rule-Based</strong>
-            </div>
-
-            <div className="hero-stat-card">
-              <span className="hero-stat-label">Constraint Awareness</span>
-              <strong>Age + Injury</strong>
+      <aside className="sidebar">
+        <div>
+          <div className="sidebar-brand">
+            <div className="brand-logo">CV</div>
+            <div>
+              <h2>CV Fitness</h2>
+              <p>Personalised Workout Platform</p>
             </div>
           </div>
 
-          <div className="nav-tabs hero-tabs">
+          <nav className="sidebar-nav">
             <button
-              type="button"
-              onClick={() => setPage("dashboard")}
-              className={`tab-btn ${page === "dashboard" ? "active" : ""}`}
+              className={page === "dashboard" ? "nav-link active" : "nav-link"}
+              onClick={() => {
+                setPage("dashboard");
+                setEditingProfile(false);
+              }}
             >
               Dashboard
             </button>
 
             <button
-              type="button"
-              onClick={() => setPage("history")}
-              className={`tab-btn ${page === "history" ? "active" : ""}`}
+              className={page === "profile" ? "nav-link active" : "nav-link"}
+              onClick={() => {
+                setPage("profile");
+                setEditingProfile(true);
+              }}
+            >
+              Profile
+            </button>
+
+            <button
+              className={page === "history" ? "nav-link active" : "nav-link"}
+              onClick={() => {
+                setPage("history");
+                setEditingProfile(false);
+              }}
             >
               Workout History
             </button>
 
             <button
-              type="button"
-              onClick={() => setPage("progress")}
-              className={`tab-btn ${page === "progress" ? "active" : ""}`}
+              className={page === "progress" ? "nav-link active" : "nav-link"}
+              onClick={() => {
+                setPage("progress");
+                setEditingProfile(false);
+              }}
             >
-              Progress
+              Evaluation
             </button>
-          </div>
-        </div>
-
-        <div className="hero-right">
-          <div className="user-panel">
-            <span className="user-chip">👤 {user.username}</span>
 
             <button
-              type="button"
+              className={page === "library" ? "nav-link active" : "nav-link"}
               onClick={() => {
-                setPage("dashboard");
-                setEditingProfile((prev) => !prev);
+                setPage("library");
+                setEditingProfile(false);
               }}
-              className="secondary-btn"
             >
-              {editingProfile ? "Close Profile" : "Edit Profile"}
+              Exercise Library
             </button>
+          </nav>
+        </div>
 
-            <button type="button" onClick={handleLogout} className="logout-btn">
-              Logout
-            </button>
+        <div className="sidebar-footer">
+          <div style={{ marginBottom: 12 }}>
+            <span className="user-chip">👤 {user.username}</span>
           </div>
-        </div>
-      </header>
 
-      {profileLoading ? (
-        <div className="page-card">
-          <p>Loading profile...</p>
+          <button className="btn btn-secondary btn-full" onClick={handleLogout}>
+            Log Out
+          </button>
         </div>
-      ) : profileMissing ? (
-        <div className="page-card">
-          <ProfileSetup
-            token={token}
-            onSaved={async () => {
-              await fetchProfile();
-              refreshSummary();
-              setPage("dashboard");
-              setEditingProfile(false);
-            }}
-          />
-        </div>
-      ) : page === "history" ? (
-        <div className="page-card">
-          <WorkoutHistory refreshKey={refreshKey} token={token} />
-        </div>
-      ) : page === "progress" ? (
-        <div className="page-card">
-          <h2 className="section-title">Performance & Evaluation Insights</h2>
-          <p className="subtle-text" style={{ marginTop: 0 }}>
-            Review workout completion, ratings, and recommendation performance
-            across your recorded sessions.
-          </p>
-          <EvaluationResults refreshKey={refreshKey} token={token} />
-        </div>
-      ) : (
-        <>
-          {editingProfile && (
-            <div className="page-card">
-              <div className="profile-edit-top">
-                <div>
-                  👤 <b>Current Profile:</b> {profile?.fitnessLevel} | {profile?.goal} |{" "}
-                  {profile?.equipment}
-                  {profile?.age ? ` | age ${profile.age}` : ""}
-                  {profile?.injury ? ` | injury ${profile.injury}` : ""}
+      </aside>
+
+      <main className="main-content">
+        <header className="topbar">
+          <div>
+            <p className="eyebrow">Product Dashboard</p>
+            <h1>Performance Workspace</h1>
+          </div>
+
+          <div className="topbar-pill">
+            <span className="status-dot"></span>
+            System Active
+          </div>
+        </header>
+
+        <section className="hero-panel">
+          <div>
+            <p className="eyebrow">Smart Recommendation Engine</p>
+            <h2>Personalised lower-body workouts with evaluation-driven comparison</h2>
+            <p className="hero-text">
+              Generate profile-aware workout options, select a personalised plan,
+              log workout outcomes, and compare performance using completion,
+              suitability, structure, enjoyment, and difficulty feedback.
+            </p>
+          </div>
+
+          <div className="hero-stats">
+            <div className="stat-card">
+              <span>Current Profile</span>
+              <strong>{heroProfileText}</strong>
+            </div>
+            <div className="stat-card">
+              <span>Recommendation Mode</span>
+              <strong>Rule-Based</strong>
+            </div>
+            <div className="stat-card">
+              <span>Constraint Awareness</span>
+              <strong>Age + Injury</strong>
+            </div>
+          </div>
+        </section>
+
+        {profileLoading ? (
+          <section className="panel">
+            <h3>Loading profile...</h3>
+          </section>
+        ) : profileMissing ? (
+          <section className="panel">
+            <div className="panel-header">
+              <div>
+                <p className="panel-kicker">Setup Required</p>
+                <h3>Create Your Profile</h3>
+              </div>
+            </div>
+
+            <ProfileSetup
+              token={token}
+              onSaved={async () => {
+                await fetchProfile();
+                refreshSummary();
+                setPage("dashboard");
+                setEditingProfile(false);
+              }}
+            />
+          </section>
+        ) : (
+          <>
+            {page === "dashboard" && (
+              <>
+                <div className="dashboard-grid">
+                  <section className="panel panel-large">
+                    <div className="panel-header">
+                      <div>
+                        <p className="panel-kicker">Main Overview</p>
+                        <h3>Workout Dashboard</h3>
+                      </div>
+                    </div>
+
+                    <WorkoutDashboard
+                      workout={recommendedRec}
+                      latestLog={latestLog}
+                      evaluationSummary={evaluationSummary}
+                      loading={loadingRec || selectingWorkout}
+                      onGeneratePersonalised={generateRecommendation}
+                    />
+                  </section>
+
+                  <section className="panel">
+                    <div className="panel-header">
+                      <div>
+                        <p className="panel-kicker">User Profile</p>
+                        <h3>Profile Snapshot</h3>
+                      </div>
+                    </div>
+                    <ProfileSnapshot profile={profile} />
+                  </section>
+
+                  <section className="panel">
+                    <div className="panel-header">
+                      <div>
+                        <p className="panel-kicker">Recent Activity</p>
+                        <h3>Latest Interaction</h3>
+                      </div>
+                    </div>
+                    <RecentActivity latestLog={latestLog} />
+                  </section>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setEditingProfile(false)}
-                  className="secondary-btn"
-                >
-                  Close
-                </button>
-              </div>
+                <section className="panel">
+                  <div className="panel-header">
+                    <div>
+                      <p className="panel-kicker">Workout Generation</p>
+                      <h3>Personalised Workout Options</h3>
+                    </div>
+                  </div>
 
-              <div style={{ marginTop: 16 }}>
+                  <div className="card-soft" style={{ marginBottom: 18 }}>
+                    <p style={{ margin: 0, fontSize: "14px", color: "#475569" }}>
+                      Example of a generic online workout plan used for comparison:
+                    </p>
+                    <ul style={{ marginTop: 8, paddingLeft: 18 }}>
+                      <li>
+                        <a
+                          href="https://www.verywellfit.com/beginner-leg-day-workout-5323162"
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Verywell Fit – Beginner Leg Day Workout
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <p className="subtle-text" style={{ marginTop: 0 }}>
+                    Generate personalised lower-body workout options tailored to
+                    fitness level, goal, equipment, age, and injury status.
+                  </p>
+
+                  <div className="action-row">
+                    <button
+                      type="button"
+                      disabled={loadingRec || selectingWorkout}
+                      onClick={generateRecommendation}
+                      className="btn btn-primary"
+                    >
+                      {loadingRec
+                        ? "Generating..."
+                        : "Generate Personalised Workout Options"}
+                    </button>
+                  </div>
+
+                  {loadingRec && <p>Generating recommendation...</p>}
+                  {selectingWorkout && <p>Saving selected workout...</p>}
+                  {recError && <p className="status-error">{recError}</p>}
+
+                  {!loadingRec &&
+                    !selectingWorkout &&
+                    recommendedExercises.length === 0 &&
+                    recommendedOptions.length === 0 &&
+                    !recError && (
+                      <div className="empty-state">
+                        No workout recommendation loaded yet. Generate personalised
+                        workout options to begin.
+                      </div>
+                    )}
+
+                  {recommendedOptions.length > 0 && (
+                    <div className="personalised-options-grid">
+                      {recommendedOptions.map((option, index) => (
+                        <div
+                          key={`${option.goal || option.template}-${index}`}
+                          className="personalised-option-card"
+                        >
+                          <div className="personalised-option-top">
+                            <div>
+                              <h3>{option.label}</h3>
+                              <p className="option-description">{option.description}</p>
+
+                              <p
+                                style={{
+                                  fontSize: "13px",
+                                  color: "#64748b",
+                                  marginTop: "6px",
+                                }}
+                              >
+                                {option.reason}
+                              </p>
+
+                              <div
+                                style={{
+                                  marginTop: "10px",
+                                  display: "flex",
+                                  gap: "6px",
+                                  flexWrap: "wrap",
+                                }}
+                              >
+                                {profile?.age >= 50 && (
+                                  <span className="badge badge-warning">
+                                    Age-aware adjustment applied
+                                  </span>
+                                )}
+
+                                {profile?.injury && profile.injury !== "none" && (
+                                  <span className="badge badge-danger">
+                                    Injury-aware filtering applied
+                                  </span>
+                                )}
+
+                                <span className="badge badge-light">
+                                  Goal-based structure
+                                </span>
+                              </div>
+
+                              <div className="option-prescription">
+                                <span className="option-prescription-label">
+                                  Prescription:
+                                </span>
+                                <span>
+                                  {option.prescription?.sets ?? "-"} sets ×{" "}
+                                  {option.prescription?.reps ?? "-"} reps
+                                </span>
+                              </div>
+                            </div>
+
+                            <span className="badge badge-dark">personalised</span>
+                          </div>
+
+                          <hr className="option-divider" />
+
+                          <h4 className="option-exercises-title">Exercises</h4>
+
+                          <ExercisesList exercises={option.exercises} />
+
+                          <div className="option-footer">
+                            <button
+                              type="button"
+                              className="btn btn-primary"
+                              disabled={selectingWorkout}
+                              onClick={() => selectPersonalisedWorkout(option)}
+                            >
+                              {selectingWorkout
+                                ? "Selecting..."
+                                : "Select This Workout"}
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {recommendedExercises.length > 0 && (
+                    <>
+                      <div className="workout-box">
+                        <h3 style={{ textTransform: "capitalize", marginTop: 0 }}>
+                          {recommendedRec?.workoutType} Lower-Body Workout
+                        </h3>
+
+                        <ExercisesList exercises={recommendedExercises} />
+                      </div>
+
+                      <div className="card-soft" style={{ marginTop: 18 }}>
+                        <h3 style={{ marginTop: 0 }}>Workout Evaluation Submission</h3>
+
+                        <div className="feedback-grid">
+                          <label className="inline-field">
+                            <span>
+                              <b>Completed:</b>
+                            </span>
+                            <input
+                              type="checkbox"
+                              checked={completed}
+                              onChange={(e) => setCompleted(e.target.checked)}
+                            />
+                          </label>
+
+                          <label className="inline-field">
+                            <span>
+                              <b>Suitability Rating (1–5):</b>
+                            </span>
+                            <input
+                              type="number"
+                              min={1}
+                              max={5}
+                              value={suitabilityRating}
+                              onChange={(e) =>
+                                setSuitabilityRating(Number(e.target.value))
+                              }
+                            />
+                          </label>
+
+                          <label className="inline-field">
+                            <span>
+                              <b>Structure Rating (1–5):</b>
+                            </span>
+                            <input
+                              type="number"
+                              min={1}
+                              max={5}
+                              value={structureRating}
+                              onChange={(e) =>
+                                setStructureRating(Number(e.target.value))
+                              }
+                            />
+                          </label>
+
+                          <label className="inline-field">
+                            <span>
+                              <b>Enjoyment Rating (1–5):</b>
+                            </span>
+                            <input
+                              type="number"
+                              min={1}
+                              max={5}
+                              value={enjoymentRating}
+                              onChange={(e) =>
+                                setEnjoymentRating(Number(e.target.value))
+                              }
+                            />
+                          </label>
+
+                          <label className="inline-field">
+                            <span>
+                              <b>Difficulty:</b>
+                            </span>
+                            <select
+                              value={difficultyFeedback}
+                              onChange={(e) => setDifficultyFeedback(e.target.value)}
+                            >
+                              <option value="too_easy">Too Easy</option>
+                              <option value="just_right">Just Right</option>
+                              <option value="too_hard">Too Hard</option>
+                            </select>
+                          </label>
+
+                          <label className="inline-field">
+                            <span>
+                              <b>Workout Duration (minutes):</b>
+                            </span>
+                            <input
+                              type="number"
+                              min={0}
+                              value={durationActual}
+                              onChange={(e) => setDurationActual(e.target.value)}
+                            />
+                          </label>
+
+                          <div className="form-group">
+                            <label>Notes</label>
+                            <textarea
+                              value={notes}
+                              onChange={(e) => setNotes(e.target.value)}
+                              rows={4}
+                            />
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={submitFeedback}
+                          disabled={submitting}
+                          className="btn btn-primary"
+                        >
+                          {submitting ? "Saving..." : "Submit Evaluation"}
+                        </button>
+
+                        {submitMsg && (
+                          <p className="status-success" style={{ marginTop: 14 }}>
+                            {submitMsg}
+                          </p>
+                        )}
+                        {submitErr && (
+                          <p className="status-error" style={{ marginTop: 14 }}>
+                            {submitErr}
+                          </p>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </section>
+              </>
+            )}
+
+            {page === "profile" && (
+              <section className="panel">
+                <div className="panel-header">
+                  <div>
+                    <p className="panel-kicker">User Settings</p>
+                    <h3>Profile Setup</h3>
+                  </div>
+                </div>
+
+                <div className="card-soft" style={{ marginBottom: 18 }}>
+                  <div>
+                    <b>Current Profile:</b> {profile?.fitnessLevel} | {profile?.goal} |{" "}
+                    {profile?.equipment}
+                    {profile?.age ? ` | age ${profile.age}` : ""}
+                    {profile?.injury ? ` | injury ${profile.injury}` : ""}
+                  </div>
+                </div>
+
                 <ProfileSetup
                   token={token}
                   mode="edit"
@@ -565,296 +910,67 @@ function App() {
                     refreshSummary();
                   }}
                 />
-              </div>
-            </div>
-          )}
+              </section>
+            )}
 
-          <WorkoutDashboard
-            workout={recommendedRec}
-            latestLog={latestLog}
-            evaluationSummary={evaluationSummary}
-            loading={loadingRec || selectingWorkout}
-            onGeneratePersonalised={generateRecommendation}
-          />
-
-          <div className="dashboard-two-col">
-            <ProfileSnapshot profile={profile} />
-            <RecentActivity latestLog={latestLog} />
-          </div>
-
-          <div className="page-card">
-            <h2 className="section-title">Personalised Workout Generation</h2>
-
-            <div style={{ marginBottom: "12px", fontSize: "13px", color: "#666" }}>
-              Example of a generic online workout plan used for comparison:
-              <ul style={{ marginTop: "6px", paddingLeft: "18px" }}>
-                <li>
-                  <a
-                    href="https://www.verywellfit.com/beginner-leg-day-workout-5323162"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Verywell Fit – Beginner Leg Day Workout
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            <p className="subtle-text" style={{ marginTop: 0 }}>
-              Generate personalised lower-body workout options tailored to your
-              profile, training goal, equipment, age, and injury status.
-            </p>
-
-            <div className="action-row">
-              <button
-                type="button"
-                disabled={loadingRec || selectingWorkout}
-                onClick={generateRecommendation}
-                className="action-btn active"
-              >
-                {loadingRec ? "Generating..." : "Generate Personalised Workout Options"}
-              </button>
-            </div>
-
-            {loadingRec && <p>Generating recommendation...</p>}
-            {selectingWorkout && <p>Saving selected workout...</p>}
-            {recError && <p className="status-error">{recError}</p>}
-
-            {!loadingRec &&
-              !selectingWorkout &&
-              recommendedExercises.length === 0 &&
-              recommendedOptions.length === 0 &&
-              !recError && (
-                <div className="empty-state">
-                  No workout recommendation loaded yet. Generate personalised
-                  workout options to begin.
-                </div>
-              )}
-
-            {recommendedOptions.length > 0 && (
-              <div className="personalised-options-grid">
-                {recommendedOptions.map((option, index) => (
-                  <div
-                    key={`${option.goal || option.template}-${index}`}
-                    className="personalised-option-card"
-                  >
-                    <div className="personalised-option-top">
-                      <div>
-                        <h3>{option.label}</h3>
-                        <p className="option-description">{option.description}</p>
-
-                        <p
-                          style={{
-                            fontSize: "13px",
-                            color: "#666",
-                            marginTop: "6px",
-                          }}
-                        >
-                          {option.reason}
-                        </p>
-
-                        <div
-                          style={{
-                            marginTop: "6px",
-                            display: "flex",
-                            gap: "6px",
-                            flexWrap: "wrap",
-                          }}
-                        >
-                          {profile?.age >= 50 && (
-                            <span className="badge badge-warning">
-                              Age-aware adjustment applied
-                            </span>
-                          )}
-
-                          {profile?.injury && profile.injury !== "none" && (
-                            <span className="badge badge-danger">
-                              Injury-aware filtering applied
-                            </span>
-                          )}
-
-                          <span className="badge badge-light">
-                            Goal-based structure
-                          </span>
-                        </div>
-
-                        <div className="option-prescription">
-                          <span className="option-prescription-label">
-                            Prescription:
-                          </span>
-                          <span>
-                            {option.prescription?.sets ?? "-"} sets ×{" "}
-                            {option.prescription?.reps ?? "-"} reps
-                          </span>
-                        </div>
-                      </div>
-
-                      <span className="badge badge-dark">personalised</span>
-                    </div>
-
-                    <hr className="option-divider" />
-
-                    <h4 className="option-exercises-title">Exercises</h4>
-
-                    <ExercisesList exercises={option.exercises} />
-
-                    <div className="option-footer">
-                      <button
-                        type="button"
-                        className="primary-btn"
-                        disabled={selectingWorkout}
-                        onClick={() => selectPersonalisedWorkout(option)}
-                      >
-                        {selectingWorkout ? "Selecting..." : "Select This Workout"}
-                      </button>
-                    </div>
+            {page === "history" && (
+              <section className="panel">
+                <div className="panel-header">
+                  <div>
+                    <p className="panel-kicker">Workout Tracking</p>
+                    <h3>Workout History</h3>
                   </div>
-                ))}
-              </div>
-            )}
-
-            {recommendedExercises.length > 0 && (
-              <>
-                <div className="workout-box">
-                  <h3 style={{ textTransform: "capitalize", marginTop: 0 }}>
-                    {recommendedRec?.workoutType} Lower-Body Workout
-                  </h3>
-
-                  <ExercisesList exercises={recommendedExercises} />
                 </div>
 
-                <div className="page-card" style={{ marginTop: 18, marginBottom: 0 }}>
-                  <h3 style={{ marginTop: 0 }}>Workout Evaluation Submission</h3>
+                <WorkoutHistory refreshKey={refreshKey} token={token} />
+              </section>
+            )}
 
-                  <div className="feedback-grid">
-                    <label className="inline-field">
-                      <span>
-                        <b>Completed:</b>
-                      </span>
-                      <input
-                        type="checkbox"
-                        checked={completed}
-                        onChange={(e) => setCompleted(e.target.checked)}
-                      />
-                    </label>
-
-                    <label className="inline-field">
-                      <span>
-                        <b>Suitability Rating (1–5):</b>
-                      </span>
-                      <input
-                        type="number"
-                        min={1}
-                        max={5}
-                        value={suitabilityRating}
-                        onChange={(e) => setSuitabilityRating(Number(e.target.value))}
-                      />
-                    </label>
-
-                    <label className="inline-field">
-                      <span>
-                        <b>Structure Rating (1–5):</b>
-                      </span>
-                      <input
-                        type="number"
-                        min={1}
-                        max={5}
-                        value={structureRating}
-                        onChange={(e) => setStructureRating(Number(e.target.value))}
-                      />
-                    </label>
-
-                    <label className="inline-field">
-                      <span>
-                        <b>Enjoyment Rating (1–5):</b>
-                      </span>
-                      <input
-                        type="number"
-                        min={1}
-                        max={5}
-                        value={enjoymentRating}
-                        onChange={(e) => setEnjoymentRating(Number(e.target.value))}
-                      />
-                    </label>
-
-                    <label className="inline-field">
-                      <span>
-                        <b>Difficulty:</b>
-                      </span>
-                      <select
-                        value={difficultyFeedback}
-                        onChange={(e) => setDifficultyFeedback(e.target.value)}
-                      >
-                        <option value="too_easy">Too Easy</option>
-                        <option value="just_right">Just Right</option>
-                        <option value="too_hard">Too Hard</option>
-                      </select>
-                    </label>
-
-                    <label className="inline-field">
-                      <span>
-                        <b>Workout Duration (minutes):</b>
-                      </span>
-                      <input
-                        type="number"
-                        min={0}
-                        value={durationActual}
-                        onChange={(e) => setDurationActual(e.target.value)}
-                      />
-                    </label>
-
-                    <div className="form-group">
-                      <label>Notes</label>
-                      <textarea
-                        value={notes}
-                        onChange={(e) => setNotes(e.target.value)}
-                        rows={4}
-                      />
-                    </div>
+            {page === "progress" && (
+              <section className="panel">
+                <div className="panel-header">
+                  <div>
+                    <p className="panel-kicker">Research Metrics</p>
+                    <h3>Performance & Evaluation Insights</h3>
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={submitFeedback}
-                    disabled={submitting}
-                    className="primary-btn"
-                  >
-                    {submitting ? "Saving..." : "Submit Evaluation"}
-                  </button>
-
-                  {submitMsg && (
-                    <p className="status-success" style={{ marginTop: 14 }}>
-                      {submitMsg}
-                    </p>
-                  )}
-                  {submitErr && (
-                    <p className="status-error" style={{ marginTop: 14 }}>
-                      {submitErr}
-                    </p>
-                  )}
                 </div>
-              </>
-            )}
-          </div>
 
-          <div className="page-card">
-            <h2 className="section-title">Exercise Knowledge Base</h2>
-            <p className="subtle-text" style={{ marginTop: 0 }}>
-              Exercise records currently stored in the system and used by the
-              recommendation engine.
-            </p>
+                <p className="subtle-text" style={{ marginTop: 0 }}>
+                  Review workout completion, ratings, and recommendation
+                  performance across your recorded sessions.
+                </p>
 
-            {loadingExercises && <p>Loading exercises...</p>}
-            {error && <p className="status-error">{error}</p>}
-
-            {!loadingExercises && exercises.length === 0 && (
-              <div className="empty-state">No exercises found in the dataset.</div>
+                <EvaluationResults refreshKey={refreshKey} token={token} />
+              </section>
             )}
 
-            <ExercisesList exercises={exercises} />
-          </div>
-        </>
-      )}
+            {page === "library" && (
+              <section className="panel">
+                <div className="panel-header">
+                  <div>
+                    <p className="panel-kicker">Reference Data</p>
+                    <h3>Exercise Knowledge Base</h3>
+                  </div>
+                </div>
+
+                <p className="subtle-text" style={{ marginTop: 0 }}>
+                  Exercise records currently stored in the system and used by the
+                  recommendation engine.
+                </p>
+
+                {loadingExercises && <p>Loading exercises...</p>}
+                {error && <p className="status-error">{error}</p>}
+
+                {!loadingExercises && exercises.length === 0 && (
+                  <div className="empty-state">No exercises found in the dataset.</div>
+                )}
+
+                <ExercisesList exercises={exercises} />
+              </section>
+            )}
+          </>
+        )}
+      </main>
     </div>
   );
 }

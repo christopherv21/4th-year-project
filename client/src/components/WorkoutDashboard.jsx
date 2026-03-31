@@ -19,20 +19,20 @@ export default function WorkoutDashboard({
   onGeneratePersonalised,
   loading = false,
 }) {
-  const exerciseCount = workout?.exercises?.length || 0;
+  const exercises = Array.isArray(workout?.exercises) ? workout.exercises : [];
+  const exerciseCount = exercises.length;
 
   const estimatedDuration =
-    workout?.exercises?.length > 0
-      ? `${workout.exercises.length * 8}-${workout.exercises.length * 10} min`
-      : "-";
+    exerciseCount > 0 ? `${exerciseCount * 8}-${exerciseCount * 10} min` : "-";
 
   const workoutType = workout?.workoutType || "none";
   const sourceName = workout?.sourceName || "Rule-Based Recommendation Engine";
+  const sourceType = workout?.sourceType || "recommender";
 
   const difficultyText = latestLog?.difficultyFeedback || "-";
 
   const badgeClass =
-    workoutType === "personalised" ? "badge badge-dark" : "badge badge-light";
+    workoutType === "personalised" ? "badge badge-dark" : "badge badge-outline";
 
   const difficultyBadgeClass =
     difficultyText === "just_right"
@@ -44,7 +44,7 @@ export default function WorkoutDashboard({
       : "badge badge-light";
 
   const displayWorkoutType =
-    workoutType === "personalised" ? "Personalised" : "None";
+    workoutType === "personalised" ? "Personalised" : "No active plan";
 
   const personalised = evaluationSummary?.personalised || null;
   const totalLogs = evaluationSummary?.overall?.totalLogs || 0;
@@ -64,13 +64,13 @@ export default function WorkoutDashboard({
 
     if (completion >= 80 && justRight >= 60) {
       recommendationText =
-        "The personalised recommendation logic is currently producing strong completion and difficulty-match results.";
+        "The personalised recommendation logic is producing strong completion and difficulty-match performance.";
     } else if (completion >= 60) {
       recommendationText =
-        "The personalised workouts are showing promising results, with room for further tuning based on user feedback.";
+        "The personalised workouts are performing reasonably well, with room for further tuning from user feedback.";
     } else {
       recommendationText =
-        "The logged feedback suggests the recommendation rules may need refinement to improve workout fit.";
+        "The recorded feedback suggests the recommendation rules may need refinement to improve workout fit.";
     }
 
     if (suitability !== null && suitability >= 4.0) {
@@ -78,20 +78,29 @@ export default function WorkoutDashboard({
     }
   }
 
+  const explanationItems = [
+    "Workout structure is selected using rule-based logic.",
+    "Exercise count is adapted to the user's fitness level.",
+    "Sets and reps are aligned to the selected training goal.",
+    "Lower-body exercise choice is filtered by equipment and constraints.",
+  ];
+
   return (
-    <div className="page-card">
-      <div className="dashboard-hero-panel">
+    <div>
+      <div className="dashboard-hero-panel" style={{ marginBottom: 20 }}>
         <div className="dashboard-hero-top">
           <div>
             <div className="hero-badge" style={{ marginBottom: 12 }}>
-              Workout Control Centre
+              Smart Workout Workspace
             </div>
+
             <h2 className="section-title" style={{ marginBottom: 8 }}>
               Lower-Body Training Dashboard
             </h2>
+
             <p className="subtle-text" style={{ marginTop: 0, marginBottom: 0 }}>
-              Monitor your current workout, generate personalised lower-body plans,
-              and track recommendation performance over time.
+              Monitor the current personalised workout, generate a new plan, and
+              review how the recommendation logic is performing over time.
             </p>
           </div>
 
@@ -114,20 +123,21 @@ export default function WorkoutDashboard({
             <div>
               <h3>Current Workout Plan</h3>
               <p className="subtle-text" style={{ margin: "8px 0 0 0" }}>
-                Active lower-body recommendation currently loaded in the system.
+                Active lower-body recommendation currently saved in the system.
               </p>
             </div>
+
             <span className={badgeClass}>{displayWorkoutType}</span>
           </div>
 
-          {!workout?.exercises?.length ? (
+          {!exercises.length ? (
             <div className="empty-state">
               <p style={{ marginTop: 0, marginBottom: 6, fontWeight: 700 }}>
-                No workout generated yet.
+                No workout plan is active yet.
               </p>
               <p style={{ margin: 0 }}>
-                Start by generating and selecting a personalised lower-body workout
-                plan.
+                Generate personalised workout options and select one to load it
+                into the dashboard.
               </p>
             </div>
           ) : (
@@ -147,15 +157,33 @@ export default function WorkoutDashboard({
                   <span className="dashboard-info-label">Source</span>
                   <span className="dashboard-info-value">{sourceName}</span>
                 </div>
+
+                <div className="dashboard-plan-meta-item">
+                  <span className="dashboard-info-label">Engine Type</span>
+                  <span className="dashboard-info-value">{sourceType}</span>
+                </div>
               </div>
 
-              <p className="subtle-text" style={{ marginTop: 14, marginBottom: 0 }}>
-                This workout was generated using rule-based logic based on user
-                profile data and lower-body training goals.
-              </p>
+              <div
+                className="insight-highlight"
+                style={{ marginTop: 16, marginBottom: 16 }}
+              >
+                Why this plan was generated: the workout structure, volume, and
+                exercise selection are being chosen using profile-aware rules for
+                lower-body training.
+              </div>
+
+              <div className="dashboard-info-list" style={{ marginBottom: 16 }}>
+                {explanationItems.map((item, index) => (
+                  <div key={index} className="dashboard-info-item">
+                    <span className="dashboard-info-label">Rule {index + 1}</span>
+                    <span className="dashboard-info-value">{item}</span>
+                  </div>
+                ))}
+              </div>
 
               <div className="dashboard-exercise-preview">
-                {workout.exercises.map((exercise, index) => (
+                {exercises.map((exercise, index) => (
                   <div
                     key={`${exercise.exerciseId || exercise._id || index}-${index}`}
                     className="dashboard-exercise-row"
@@ -164,6 +192,7 @@ export default function WorkoutDashboard({
                       <div className="dashboard-exercise-index">
                         Exercise {index + 1}
                       </div>
+
                       <span className="dashboard-exercise-name">
                         {exercise.name || "Exercise"}
                       </span>
@@ -187,51 +216,79 @@ export default function WorkoutDashboard({
         <div className="dashboard-panel">
           <div className="dashboard-panel-top">
             <div>
-              <h3>Session Insights</h3>
+              <h3>Latest Session Insights</h3>
               <p className="subtle-text" style={{ margin: "8px 0 0 0" }}>
-                Most recent workout feedback and user-response metrics.
+                Most recent feedback captured from the workout evaluation form.
               </p>
             </div>
           </div>
 
-          <div className="dashboard-info-list">
-            <div className="dashboard-info-item">
-              <span className="dashboard-info-label">Last Difficulty</span>
-              <span className={difficultyBadgeClass}>
-                {formatDifficultyLabel(difficultyText)}
-              </span>
+          {!latestLog ? (
+            <div className="empty-state">
+              <p style={{ marginTop: 0, marginBottom: 6, fontWeight: 700 }}>
+                No session feedback available yet.
+              </p>
+              <p style={{ margin: 0 }}>
+                Submit a workout evaluation after completing a session to populate
+                this area.
+              </p>
             </div>
+          ) : (
+            <div className="dashboard-info-list">
+              <div className="dashboard-info-item">
+                <span className="dashboard-info-label">Last Difficulty</span>
+                <span className={difficultyBadgeClass}>
+                  {formatDifficultyLabel(difficultyText)}
+                </span>
+              </div>
 
-            <div className="dashboard-info-item">
-              <span className="dashboard-info-label">Suitability Rating</span>
-              <span className="dashboard-info-value">
-                {latestLog?.suitabilityRating ?? "-"}
-              </span>
-            </div>
+              <div className="dashboard-info-item">
+                <span className="dashboard-info-label">Suitability Rating</span>
+                <span className="dashboard-info-value">
+                  {latestLog?.suitabilityRating ?? "-"} / 5
+                </span>
+              </div>
 
-            <div className="dashboard-info-item">
-              <span className="dashboard-info-label">Structure Rating</span>
-              <span className="dashboard-info-value">
-                {latestLog?.structureRating ?? "-"}
-              </span>
-            </div>
+              <div className="dashboard-info-item">
+                <span className="dashboard-info-label">Structure Rating</span>
+                <span className="dashboard-info-value">
+                  {latestLog?.structureRating ?? "-"} / 5
+                </span>
+              </div>
 
-            <div className="dashboard-info-item">
-              <span className="dashboard-info-label">Enjoyment Rating</span>
-              <span className="dashboard-info-value">
-                {latestLog?.enjoymentRating ?? "-"}
-              </span>
-            </div>
+              <div className="dashboard-info-item">
+                <span className="dashboard-info-label">Enjoyment Rating</span>
+                <span className="dashboard-info-value">
+                  {latestLog?.enjoymentRating ?? "-"} / 5
+                </span>
+              </div>
 
-            <div className="dashboard-info-item">
-              <span className="dashboard-info-label">Last Workout Date</span>
-              <span className="dashboard-info-value">
-                {latestLog?.createdAt
-                  ? new Date(latestLog.createdAt).toLocaleDateString()
-                  : "-"}
-              </span>
+              <div className="dashboard-info-item">
+                <span className="dashboard-info-label">Completed</span>
+                <span className="dashboard-info-value">
+                  {latestLog?.completed ? "Yes" : "No"}
+                </span>
+              </div>
+
+              <div className="dashboard-info-item">
+                <span className="dashboard-info-label">Duration</span>
+                <span className="dashboard-info-value">
+                  {latestLog?.durationActual
+                    ? `${latestLog.durationActual} min`
+                    : "-"}
+                </span>
+              </div>
+
+              <div className="dashboard-info-item">
+                <span className="dashboard-info-label">Last Workout Date</span>
+                <span className="dashboard-info-value">
+                  {latestLog?.createdAt
+                    ? new Date(latestLog.createdAt).toLocaleDateString()
+                    : "-"}
+                </span>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -240,9 +297,11 @@ export default function WorkoutDashboard({
           <div>
             <h3>Recommendation Evaluation Summary</h3>
             <p className="subtle-text" style={{ margin: "8px 0 0 0" }}>
-              Overview of personalised workout performance based on recorded feedback.
+              Overview of personalised workout performance based on recorded user
+              feedback.
             </p>
           </div>
+
           <span className="badge badge-light">{totalLogs} logs</span>
         </div>
 
@@ -252,7 +311,7 @@ export default function WorkoutDashboard({
               No evaluation data recorded yet.
             </p>
             <p style={{ margin: 0 }}>
-              Submit workout evaluations to track how well the recommendation
+              Submit workout evaluations to measure how well the recommendation
               rules are performing over time.
             </p>
           </div>
@@ -310,7 +369,10 @@ export default function WorkoutDashboard({
               <div className="dashboard-info-item">
                 <span className="dashboard-info-label">Difficulty Match</span>
                 <span className="dashboard-info-value">
-                  {formatMetric(personalised?.difficultyPercentages?.just_right, "%")}
+                  {formatMetric(
+                    personalised?.difficultyPercentages?.just_right,
+                    "%"
+                  )}
                 </span>
               </div>
 

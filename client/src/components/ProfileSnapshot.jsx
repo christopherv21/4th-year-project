@@ -12,19 +12,28 @@ const formatInjury = (injury) => {
   return injury;
 };
 
-export default function ProfileSnapshot({ profile }) {
-  return (
-    <div className="page-card">
-      <div className="section-header">
-        <div>
-          <h2>👤 Athlete Profile</h2>
-          <p className="subtle-text" style={{ margin: "8px 0 0 0" }}>
-            Current user attributes used by the recommendation engine.
-          </p>
-        </div>
-      </div>
+const formatLabel = (value) => {
+  if (!value) return "-";
+  return String(value)
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+};
 
-      {!profile ? (
+export default function ProfileSnapshot({ profile }) {
+  const hasProfile = Boolean(profile);
+
+  const systemInterpretation =
+    profile?.injury && profile.injury !== "none"
+      ? "Constraint-aware recommendation enabled"
+      : "Standard personalised recommendation enabled";
+
+  const profileSummary = hasProfile
+    ? `${formatLabel(profile.fitnessLevel)} • ${formatLabel(profile.goal)}`
+    : "Profile not set";
+
+  return (
+    <div>
+      {!hasProfile ? (
         <div className="empty-state">
           <p style={{ marginTop: 0, marginBottom: 6, fontWeight: 700 }}>
             No profile data available yet.
@@ -42,13 +51,11 @@ export default function ProfileSnapshot({ profile }) {
               <span className="badge badge-success">Profile Active</span>
             </div>
 
-            <h3 className="snapshot-highlight-title">
-              {formatValue(profile.fitnessLevel)} / {formatValue(profile.goal)}
-            </h3>
+            <h3 className="snapshot-highlight-title">{profileSummary}</h3>
 
             <p className="snapshot-highlight-text">
-              The recommendation engine is currently using your selected profile
-              attributes to shape workout difficulty, structure, and suitability.
+              Your profile is actively shaping workout volume, exercise count,
+              training focus, and recommendation suitability.
             </p>
           </div>
 
@@ -56,19 +63,21 @@ export default function ProfileSnapshot({ profile }) {
             <div className="snapshot-item">
               <span className="snapshot-label">Fitness Level</span>
               <span className="badge badge-dark">
-                {formatValue(profile.fitnessLevel)}
+                {formatLabel(profile.fitnessLevel)}
               </span>
             </div>
 
             <div className="snapshot-item">
               <span className="snapshot-label">Goal</span>
-              <span className="badge badge-light">{formatValue(profile.goal)}</span>
+              <span className="badge badge-light">
+                {formatLabel(profile.goal)}
+              </span>
             </div>
 
             <div className="snapshot-item">
               <span className="snapshot-label">Equipment</span>
               <span className="badge badge-outline">
-                {formatValue(profile.equipment)}
+                {formatLabel(profile.equipment)}
               </span>
             </div>
 
@@ -84,11 +93,7 @@ export default function ProfileSnapshot({ profile }) {
 
             <div className="snapshot-item snapshot-item-wide">
               <span className="snapshot-label">System Interpretation</span>
-              <span className="snapshot-value">
-                {profile.injury && profile.injury !== "none"
-                  ? "Constraint-aware recommendation enabled"
-                  : "Standard personalised recommendation enabled"}
-              </span>
+              <span className="snapshot-value">{systemInterpretation}</span>
             </div>
           </div>
         </>
