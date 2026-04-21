@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
+const API_BASE = "https://fourth-year-project-8fyo.onrender.com";
+
 const defaultProfile = {
   fitnessLevel: "beginner",
   goal: "hypertrophy",
@@ -41,7 +43,7 @@ function ProfileSetup({
 
     const fetchProfile = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/profile/me", {
+        const res = await axios.get(`${API_BASE}/api/profile/me`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -94,16 +96,12 @@ function ProfileSetup({
         age: Number(formData.age),
       };
 
-      const res = await axios.post(
-        "http://localhost:5000/api/profile",
-        payload,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const res = await axios.post(`${API_BASE}/api/profile`, payload, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       const savedProfile = {
         fitnessLevel: res.data.fitnessLevel,
