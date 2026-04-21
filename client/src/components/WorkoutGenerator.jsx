@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 
+const API_BASE = "https://fourth-year-project-8fyo.onrender.com";
+
 const WorkoutGenerator = () => {
   const [options, setOptions] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -11,7 +13,7 @@ const WorkoutGenerator = () => {
 
     try {
       const res = await fetch(
-        `http://localhost:5000/api/recommendations/personalised-options`,
+        `${API_BASE}/api/recommendations/personalised-options`,
         {
           method: "POST",
           headers: {
@@ -34,8 +36,8 @@ const WorkoutGenerator = () => {
       <h2>Personalised Workout Generation</h2>
 
       <p style={{ marginBottom: "15px" }}>
-        Generate personalised lower-body workout options tailored to your fitness level,
-        goal, equipment, age, and injury status.
+        Generate personalised lower-body workout options tailored to your fitness
+        level, goal, equipment, age, and injury status.
       </p>
 
       <button onClick={generateWorkout}>
@@ -60,11 +62,10 @@ const WorkoutGenerator = () => {
 
               <p>{option.description}</p>
 
-              {/* 🔥 A-GRADE EXPLANATION LINE */}
               <p style={{ fontSize: "13px", color: "#666", marginTop: "6px" }}>
                 Generated using rule-based logic: tailored for your {option.goal} goal,
-                with {option.exercises.length} exercises selected based on your fitness level,
-                equipment, and constraints.
+                with {option.exercises.length} exercises selected based on your
+                fitness level, equipment, and constraints.
               </p>
 
               <p>

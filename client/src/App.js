@@ -137,33 +137,18 @@ function App() {
     setError("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/profile/me", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (res.status === 404) {
-        setProfile(null);
-        setProfileMissing(true);
-        return;
-      }
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.message || "Failed to load profile");
-        setProfile(null);
-        setProfileMissing(true);
-        return;
-      }
-
+      const data = await apiFetch("/api/profile/me");
       setProfile(data);
       setProfileMissing(false);
     } catch (err) {
-      setError("Failed to load profile");
-      setProfile(null);
-      setProfileMissing(true);
+      if (err.status === 404) {
+        setProfile(null);
+        setProfileMissing(true);
+      } else {
+        setError(err.message || "Failed to load profile");
+        setProfile(null);
+        setProfileMissing(true);
+      }
     } finally {
       setProfileLoading(false);
     }
@@ -182,7 +167,7 @@ function App() {
       setError("");
 
       try {
-        const data = await apiFetch("/api/exercises", { token });
+        const data = await apiFetch("/api/exercises");
         setExercises(Array.isArray(data) ? data : []);
       } catch (err) {
         setError(err.message || "Failed to fetch exercises");
@@ -202,7 +187,7 @@ function App() {
       setLoadingLogs(true);
 
       try {
-        const data = await apiFetch("/api/workout-logs", { token });
+        const data = await apiFetch("/api/workout-logs");
         setLogs(Array.isArray(data) ? data : []);
       } catch (err) {
         setLogs([]);
@@ -219,9 +204,7 @@ function App() {
       if (!token) return;
 
       try {
-        const data = await apiFetch("/api/workout-logs/evaluation-summary", {
-          token,
-        });
+        const data = await apiFetch("/api/workout-logs/evaluation-summary");
         setEvaluationSummary(data);
       } catch (err) {
         setEvaluationSummary(null);
@@ -236,7 +219,7 @@ function App() {
       if (!token) return;
 
       try {
-        const data = await apiFetch("/api/recommendations", { token });
+        const data = await apiFetch("/api/recommendations");
 
         if (Array.isArray(data) && data.length > 0) {
           const latest = data[0];
@@ -269,7 +252,6 @@ function App() {
 
       const rec = await apiFetch("/api/recommendations/personalised-options", {
         method: "POST",
-        token,
       });
 
       setRecommendedOptions(Array.isArray(rec?.options) ? rec.options : []);
@@ -294,7 +276,6 @@ function App() {
         {
           method: "POST",
           body: JSON.stringify({ selectedWorkout }),
-          token,
         }
       );
 
@@ -350,7 +331,6 @@ function App() {
           durationActual: durationActual === "" ? null : Number(durationActual),
           notes,
         }),
-        token,
       });
 
       setSubmitMsg(response.message || "Feedback saved successfully.");
