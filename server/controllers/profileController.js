@@ -4,9 +4,11 @@ const upsertProfile = async (req, res) => {
   try {
     const { fitnessLevel, goal, equipment, age, injury } = req.body;
 
-    if (!fitnessLevel || !goal || !equipment || age === undefined || age === null) {
+    const finalGoal = goal || "hypertrophy";
+
+    if (!fitnessLevel || !equipment || age === undefined || age === null) {
       return res.status(400).json({
-        message: "fitnessLevel, goal, equipment, and age are required",
+        message: "fitnessLevel, equipment, and age are required",
       });
     }
 
@@ -23,7 +25,7 @@ const upsertProfile = async (req, res) => {
       {
         userId: req.userId,
         fitnessLevel,
-        goal,
+        goal: finalGoal,
         equipment,
         age: parsedAge,
         injury: injury || "none",
