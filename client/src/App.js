@@ -764,16 +764,37 @@ function App() {
                         <h3 style={{ marginTop: 0 }}>Workout Evaluation Submission</h3>
 
                         <div className="feedback-grid">
-                          <label className="inline-field">
-                            <span>
+                          <div className="completion-toggle-field">
+                            <span className="completion-toggle-label">
                               <b>Completed:</b>
                             </span>
-                            <input
-                              type="checkbox"
-                              checked={completed}
-                              onChange={(e) => setCompleted(e.target.checked)}
-                            />
-                          </label>
+
+                            <button
+                              type="button"
+                              className={`completion-toggle-btn ${
+                                completed ? "active" : ""
+                              }`}
+                              onClick={() => setCompleted((prev) => !prev)}
+                              aria-pressed={completed}
+                            >
+                              <span className="completion-toggle-icon">
+                                {completed ? "✓" : ""}
+                              </span>
+
+                              <span className="completion-toggle-content">
+                                <span className="completion-toggle-title">
+                                  {completed
+                                    ? "Workout completed"
+                                    : "Mark workout as completed"}
+                                </span>
+                                <span className="completion-toggle-subtitle">
+                                  {completed
+                                    ? "This session will be recorded as completed."
+                                    : "Click to confirm that you finished this workout."}
+                                </span>
+                              </span>
+                            </button>
+                          </div>
 
                           <label className="inline-field">
                             <span>

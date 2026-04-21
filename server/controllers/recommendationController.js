@@ -4,6 +4,18 @@ const Recommendation = require("../models/Recommendation");
 const Workout = require("../models/Workout");
 const WorkoutExercise = require("../models/WorkoutExercise");
 
+// Shuffle helper
+const shuffleArray = (arr) => {
+  const copy = [...arr];
+
+  for (let i = copy.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+
+  return copy;
+};
+
 // Pick one exercise while avoiding duplicates and recently used ones
 const pickOne = (arr, excludeIds = new Set(), avoidIds = new Set()) => {
   const filtered = arr.filter(
@@ -11,14 +23,18 @@ const pickOne = (arr, excludeIds = new Set(), avoidIds = new Set()) => {
       !excludeIds.has(String(item._id)) && !avoidIds.has(String(item._id))
   );
 
-  if (filtered.length > 0) {
-    return filtered[Math.floor(Math.random() * filtered.length)];
+  const shuffledFiltered = shuffleArray(filtered);
+
+  if (shuffledFiltered.length > 0) {
+    return shuffledFiltered[0];
   }
 
   const fallback = arr.filter((item) => !excludeIds.has(String(item._id)));
-  if (fallback.length === 0) return null;
+  const shuffledFallback = shuffleArray(fallback);
 
-  return fallback[Math.floor(Math.random() * fallback.length)];
+  if (shuffledFallback.length === 0) return null;
+
+  return shuffledFallback[0];
 };
 
 // Decide how many exercises based on fitness level and age
@@ -46,37 +62,47 @@ const getExerciseCount = (fitnessLevel, age) => {
   return count;
 };
 
-// Decide sets/reps based on goal, with safer adjustments for age/injury
+// Slightly varied prescriptions by goal
 const getPrescription = (goal, age, injury) => {
-  let prescription;
+  const standardOptions = {
+    strength: [
+      { sets: 4, reps: "4-6" },
+      { sets: 4, reps: "5-6" },
+      { sets: 3, reps: "5-7" },
+    ],
+    hypertrophy: [
+      { sets: 3, reps: "8-12" },
+      { sets: 3, reps: "10-12" },
+      { sets: 4, reps: "8-10" },
+    ],
+    endurance: [
+      { sets: 2, reps: "12-15" },
+      { sets: 3, reps: "12-15" },
+      { sets: 2, reps: "15-20" },
+    ],
+  };
 
-  switch (goal) {
-    case "strength":
-      prescription = { sets: 4, reps: "4-6" };
-      break;
-    case "hypertrophy":
-      prescription = { sets: 3, reps: "8-12" };
-      break;
-    case "endurance":
-      prescription = { sets: 2, reps: "12-15" };
-      break;
-    default:
-      prescription = { sets: 3, reps: "8-12" };
-  }
+  const adjustedOptions = {
+    strength: [
+      { sets: 3, reps: "6-8" },
+      { sets: 3, reps: "5-7" },
+    ],
+    hypertrophy: [
+      { sets: 2, reps: "10-12" },
+      { sets: 3, reps: "10-12" },
+    ],
+    endurance: [
+      { sets: 2, reps: "12-15" },
+      { sets: 2, reps: "15-20" },
+    ],
+  };
 
-  if (age >= 50 || injury !== "none") {
-    if (goal === "strength") {
-      return { sets: 3, reps: "6-8" };
-    }
+  const pool =
+    age >= 50 || injury !== "none"
+      ? adjustedOptions[goal] || adjustedOptions.hypertrophy
+      : standardOptions[goal] || standardOptions.hypertrophy;
 
-    if (goal === "endurance") {
-      return { sets: 2, reps: "12-15" };
-    }
-
-    return { sets: 2, reps: "10-12" };
-  }
-
-  return prescription;
+  return pool[Math.floor(Math.random() * pool.length)];
 };
 
 // Convert exercises into the format used by Recommendation
@@ -102,7 +128,7 @@ const uniquePush = (selected, exercise, seenIds) => {
   }
 };
 
-// Fill remaining workout slots
+// Fill remaining workout slots with more randomness
 const fillRemainingExercises = (
   selected,
   allExercises,
@@ -110,10 +136,12 @@ const fillRemainingExercises = (
   seenIds,
   avoidIds = new Set()
 ) => {
-  const preferred = allExercises.filter(
-    (exercise) =>
-      !seenIds.has(String(exercise._id)) &&
-      !avoidIds.has(String(exercise._id))
+  const preferred = shuffleArray(
+    allExercises.filter(
+      (exercise) =>
+        !seenIds.has(String(exercise._id)) &&
+        !avoidIds.has(String(exercise._id))
+    )
   );
 
   while (selected.length < targetCount && preferred.length > 0) {
@@ -121,8 +149,8 @@ const fillRemainingExercises = (
     uniquePush(selected, next, seenIds);
   }
 
-  const fallback = allExercises.filter(
-    (exercise) => !seenIds.has(String(exercise._id))
+  const fallback = shuffleArray(
+    allExercises.filter((exercise) => !seenIds.has(String(exercise._id)))
   );
 
   while (selected.length < targetCount && fallback.length > 0) {
@@ -133,14 +161,14 @@ const fillRemainingExercises = (
   return selected;
 };
 
-// Find an exercise by name keywords
+// Find a random exercise by name keywords
 const findByName = (
   arr,
   keywords,
   excludeIds = new Set(),
   avoidIds = new Set()
 ) => {
-  return arr.find((item) => {
+  const matches = arr.filter((item) => {
     const name = item.name.toLowerCase();
     const notUsed = !excludeIds.has(String(item._id));
     const notAvoided = !avoidIds.has(String(item._id));
@@ -151,6 +179,11 @@ const findByName = (
       keywords.some((keyword) => name.includes(keyword))
     );
   });
+
+  if (matches.length === 0) return null;
+
+  const shuffledMatches = shuffleArray(matches);
+  return shuffledMatches[0];
 };
 
 // Decide if exercise should be excluded for safety / suitability
@@ -268,6 +301,31 @@ const buildReasonText = ({ profile, goal, exerciseCount, selected }) => {
   return parts.join(" ");
 };
 
+// Goal-specific templates for more variety
+const getTemplatesByGoal = (goal) => {
+  if (goal === "strength") {
+    return [
+      ["compound", "posterior", "unilateral", "isolation", "calves"],
+      ["compound", "posterior", "isolation", "calves"],
+      ["compound", "posterior", "unilateral", "calves"],
+    ];
+  }
+
+  if (goal === "hypertrophy") {
+    return [
+      ["compound", "posterior", "unilateral", "quadIsolation", "hamIsolation", "calves"],
+      ["compound", "posterior", "quadIsolation", "hamIsolation", "calves"],
+      ["compound", "posterior", "unilateral", "quadIsolation", "calves"],
+    ];
+  }
+
+  return [
+    ["compound", "unilateral", "posterior", "isolation", "calves"],
+    ["compound", "posterior", "isolation", "calves"],
+    ["compound", "unilateral", "posterior", "calves"],
+  ];
+};
+
 // Build one workout option by goal
 const buildWorkoutByGoal = ({
   goal,
@@ -285,140 +343,68 @@ const buildWorkoutByGoal = ({
   const seenIds = new Set();
   const { sets, reps } = getPrescription(goal, profile.age, profile.injury);
 
-  if (goal === "strength") {
-    const mainCompound =
+  const templates = getTemplatesByGoal(goal);
+  const template = templates[Math.floor(Math.random() * templates.length)];
+
+  const pickers = {
+    compound: () =>
       findByName(
         compound,
-        ["squat", "hack squat", "leg press", "goblet squat"],
+        ["squat", "hack squat", "leg press", "goblet squat", "bodyweight squat"],
         seenIds,
         avoidIds
-      ) || pickOne(compound, seenIds, avoidIds);
+      ) || pickOne(compound, seenIds, avoidIds),
 
-    const mainHinge =
+    posterior: () =>
       findByName(
         posteriorChain,
-        ["hip thrust", "glute bridge", "rdl", "deadlift"],
+        ["hip thrust", "glute bridge", "rdl", "deadlift", "leg curl"],
         seenIds,
         avoidIds
-      ) || pickOne(posteriorChain, seenIds, avoidIds);
+      ) || pickOne(posteriorChain, seenIds, avoidIds),
 
-    const unilateralPattern =
+    unilateral: () =>
       findByName(
         unilateral,
-        ["step up", "reverse lunge", "split squat", "lunge"],
+        ["walking lunge", "reverse lunge", "split squat", "step up", "lunge"],
         seenIds,
         avoidIds
-      ) || pickOne(unilateral, seenIds, avoidIds);
+      ) || pickOne(unilateral, seenIds, avoidIds),
 
-    const hamOrQuadIsolation =
+    isolation: () =>
       findByName(
         isolation,
-        ["leg curl", "hamstring curl", "leg extension", "glute kickback"],
+        ["leg extension", "leg curl", "hamstring curl", "wall sit", "glute kickback", "frog pumps"],
         seenIds,
         avoidIds
-      ) || pickOne(isolation, seenIds, avoidIds);
+      ) || pickOne(isolation, seenIds, avoidIds),
 
-    const calfPattern = pickOne(calves, seenIds, avoidIds);
-
-    uniquePush(selected, mainCompound, seenIds);
-    uniquePush(selected, mainHinge, seenIds);
-    uniquePush(selected, unilateralPattern, seenIds);
-    uniquePush(selected, hamOrQuadIsolation, seenIds);
-    uniquePush(selected, calfPattern, seenIds);
-  }
-
-  if (goal === "hypertrophy") {
-    const compoundOne =
-      findByName(
-        compound,
-        ["squat", "leg press", "hack squat", "goblet squat"],
-        seenIds,
-        avoidIds
-      ) || pickOne(compound, seenIds, avoidIds);
-
-    const compoundTwo =
-      findByName(
-        posteriorChain,
-        ["hip thrust", "rdl", "glute bridge", "dumbbell hip thrust"],
-        seenIds,
-        avoidIds
-      ) || pickOne(posteriorChain, seenIds, avoidIds);
-
-    const unilateralPattern =
-      findByName(
-        unilateral,
-        ["walking lunge", "reverse lunge", "bulgarian", "split squat", "step up"],
-        seenIds,
-        avoidIds
-      ) || pickOne(unilateral, seenIds, avoidIds);
-
-    const quadIsolation =
+    quadIsolation: () =>
       findByName(
         isolation,
         ["leg extension", "wall sit", "glute kickback"],
         seenIds,
         avoidIds
-      ) || pickOne(isolation, seenIds, avoidIds);
+      ) || pickOne(isolation, seenIds, avoidIds),
 
-    const hamIsolation =
+    hamIsolation: () =>
       findByName(
         isolation,
         ["leg curl", "hamstring curl", "frog pumps"],
         seenIds,
         avoidIds
-      ) || pickOne(isolation, seenIds, avoidIds);
+      ) || pickOne(isolation, seenIds, avoidIds),
 
-    const calfPattern = pickOne(calves, seenIds, avoidIds);
+    calves: () => pickOne(calves, seenIds, avoidIds),
+  };
 
-    uniquePush(selected, compoundOne, seenIds);
-    uniquePush(selected, compoundTwo, seenIds);
-    uniquePush(selected, unilateralPattern, seenIds);
-    uniquePush(selected, quadIsolation, seenIds);
-    uniquePush(selected, hamIsolation, seenIds);
-    uniquePush(selected, calfPattern, seenIds);
-  }
-
-  if (goal === "endurance") {
-    const compoundOne =
-      findByName(
-        compound,
-        ["leg press", "squat", "goblet squat", "bodyweight squat"],
-        seenIds,
-        avoidIds
-      ) || pickOne(compound, seenIds, avoidIds);
-
-    const unilateralOne =
-      findByName(
-        unilateral,
-        ["step up", "reverse lunge", "walking lunge"],
-        seenIds,
-        avoidIds
-      ) || pickOne(unilateral, seenIds, avoidIds);
-
-    const posteriorOne =
-      findByName(
-        posteriorChain,
-        ["glute bridge", "hip thrust", "rdl", "dumbbell hip thrust"],
-        seenIds,
-        avoidIds
-      ) || pickOne(posteriorChain, seenIds, avoidIds);
-
-    const isolationOne =
-      findByName(
-        isolation,
-        ["leg extension", "leg curl", "wall sit", "frog pumps", "hamstring curl"],
-        seenIds,
-        avoidIds
-      ) || pickOne(isolation, seenIds, avoidIds);
-
-    const calfPattern = pickOne(calves, seenIds, avoidIds);
-
-    uniquePush(selected, compoundOne, seenIds);
-    uniquePush(selected, unilateralOne, seenIds);
-    uniquePush(selected, posteriorOne, seenIds);
-    uniquePush(selected, isolationOne, seenIds);
-    uniquePush(selected, calfPattern, seenIds);
-  }
+  template.forEach((slot) => {
+    const picker = pickers[slot];
+    if (picker) {
+      const exercise = picker();
+      uniquePush(selected, exercise, seenIds);
+    }
+  });
 
   fillRemainingExercises(selected, allExercises, exerciseCount, seenIds, avoidIds);
 
@@ -528,8 +514,10 @@ const generatePersonalisedWorkoutOptions = async (req, res) => {
       (value, index, arr) => arr.indexOf(value) === index
     );
 
-    const workoutOptions = orderedGoals.map((goalOption) =>
-      buildWorkoutByGoal({
+    const usedAcrossOptions = new Set([...lastExerciseIds]);
+
+    const workoutOptions = orderedGoals.map((goalOption) => {
+      const option = buildWorkoutByGoal({
         goal: goalOption,
         compound,
         posteriorChain,
@@ -539,9 +527,15 @@ const generatePersonalisedWorkoutOptions = async (req, res) => {
         allExercises: safeExercises,
         exerciseCount,
         profile,
-        avoidIds: lastExerciseIds,
-      })
-    );
+        avoidIds: usedAcrossOptions,
+      });
+
+      option.exercises.forEach((exercise) => {
+        usedAcrossOptions.add(String(exercise.exerciseId));
+      });
+
+      return option;
+    });
 
     return res.status(200).json({
       workoutType: "personalised",
@@ -556,7 +550,7 @@ const generatePersonalisedWorkoutOptions = async (req, res) => {
       },
       prescription: {
         exerciseCount,
-        note: "Each option represents a different lower-body training goal while respecting user constraints.",
+        note: "Each option represents a different lower-body training goal while respecting user constraints and introducing controlled variation.",
       },
       constraintsApplied: {
         ageAdjusted: age >= 50,

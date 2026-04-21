@@ -157,20 +157,6 @@ function ProfileSetup({
         </div>
 
         <div className="form-group">
-          <label htmlFor="goal">Goal</label>
-          <select
-            id="goal"
-            name="goal"
-            value={formData.goal}
-            onChange={handleChange}
-          >
-            <option value="strength">Strength</option>
-            <option value="hypertrophy">Hypertrophy</option>
-            <option value="endurance">Endurance</option>
-          </select>
-        </div>
-
-        <div className="form-group">
           <label htmlFor="equipment">Equipment</label>
           <select
             id="equipment"
@@ -209,6 +195,10 @@ function ProfileSetup({
             <option value="knee">Knee</option>
             <option value="back">Back</option>
           </select>
+        </div>
+
+        <div style={{ display: "none" }}>
+          <input type="hidden" name="goal" value={formData.goal} readOnly />
         </div>
 
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 6 }}>
