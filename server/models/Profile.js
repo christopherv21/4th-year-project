@@ -17,6 +17,7 @@ const profileSchema = new mongoose.Schema(
       type: String,
       enum: ["strength", "hypertrophy", "endurance"],
       required: true,
+      default: "hypertrophy",
     },
     equipment: {
       type: String,
