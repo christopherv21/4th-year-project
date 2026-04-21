@@ -13,14 +13,13 @@ dotenv.config();
 
 const app = express();
 
-const corsOptions = {
-  origin: true,
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-};
-
-app.use(cors(corsOptions));
+// ✅ SIMPLE + WORKS EVERYWHERE
+app.use(
+  cors({
+    origin: true, // allow all origins dynamically
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 
