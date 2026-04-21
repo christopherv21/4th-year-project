@@ -1708,3 +1708,159 @@ a {
   line-height: 1.4;
 }
 
+/* =========================
+   COMPARISON CARD
+========================= */
+
+.comparison-card {
+  margin-bottom: 22px;
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+}
+
+.comparison-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.comparison-header h3 {
+  margin: 4px 0 0;
+  font-size: 1.2rem;
+}
+
+/* Highlight badge (top right) */
+.comparison-highlight {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: var(--info-soft);
+  color: var(--info-text);
+  font-size: 0.84rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Intro text */
+.comparison-intro {
+  margin: 0 0 16px;
+  color: var(--text-soft);
+  line-height: 1.6;
+}
+
+.comparison-intro a {
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.comparison-intro a:hover {
+  text-decoration: underline;
+}
+
+/* =========================
+   FEATURE BADGES
+========================= */
+
+.comparison-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.feature-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.feature-yes {
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+  border: 1px solid rgba(34, 197, 94, 0.18);
+}
+
+/* =========================
+   TABLE
+========================= */
+
+.comparison-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: #ffffff;
+}
+
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 720px;
+}
+
+.comparison-table th,
+.comparison-table td {
+  padding: 14px 16px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--border);
+}
+
+.comparison-table th {
+  background: #f8fafc;
+  color: var(--text);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.comparison-table td {
+  color: var(--text-soft);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.comparison-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* =========================
+   CONCLUSION BOX
+========================= */
+
+.comparison-conclusion {
+  margin: 16px 0 0;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--panel-muted);
+  color: var(--text);
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 768px) {
+  .comparison-header {
+    flex-direction: column;
+  }
+
+  .comparison-highlight {
+    white-space: normal;
+  }
+
+  .comparison-table {
+    min-width: 600px;
+  }
+}
+

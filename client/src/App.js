@@ -382,9 +382,9 @@ function App() {
         <div className="auth-background"></div>
 
         <div className="auth-card">
-          <div className="brand-mark">CV</div>
+          <div className="brand-mark">RS</div>
           <p className="eyebrow">Personalised Fitness Platform</p>
-          <h1>CV Fitness</h1>
+          <h1>Recommender System</h1>
           <p className="auth-subtext">
             Log in to generate profile-aware lower-body workouts using goal-based
             logic, user constraints, and personalised recommendations.
@@ -431,9 +431,9 @@ function App() {
       <aside className="sidebar">
         <div>
           <div className="sidebar-brand">
-            <div className="brand-logo">CV</div>
+            <div className="brand-logo">RS</div>
             <div>
-              <h2>CV Fitness</h2>
+              <h2>Recommender System</h2>
               <p>Personalised Workout Platform</p>
             </div>
           </div>
@@ -616,21 +616,106 @@ function App() {
                     </div>
                   </div>
 
-                  <div className="card-soft" style={{ marginBottom: 18 }}>
-                    <p style={{ margin: 0, fontSize: "14px", color: "#475569" }}>
-                      Example of a generic online workout plan used for comparison:
+                  <div className="comparison-card">
+                    <div className="comparison-header">
+                      <div>
+                        <p className="panel-kicker">System Comparison</p>
+                        <h3>Why this system is better than a generic online workout</h3>
+                      </div>
+                    </div>
+
+                    <p className="comparison-intro">
+                      The system compares its personalised workout generation
+                      against a static online example:{" "}
+                      <a
+                        href="https://www.verywellfit.com/beginner-leg-day-workout-5323162"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="comparison-link"
+                      >
+                        Verywell Fit – Beginner Leg Day Workout
+                      </a>
                     </p>
-                    <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                      <li>
-                        <a
-                          href="https://www.verywellfit.com/beginner-leg-day-workout-5323162"
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          Verywell Fit – Beginner Leg Day Workout
-                        </a>
-                      </li>
-                    </ul>
+
+                    <div className="comparison-badges">
+                      <span className="feature-badge feature-yes">
+                        Personalisation
+                      </span>
+                      <span className="feature-badge feature-yes">
+                        Injury Awareness
+                      </span>
+                      <span className="feature-badge feature-yes">
+                        Age Adjustment
+                      </span>
+                      <span className="feature-badge feature-yes">
+                        History Awareness
+                      </span>
+                      <span className="feature-badge feature-yes">
+                        Explanation
+                      </span>
+                    </div>
+
+                    <div className="comparison-table-wrap">
+                      <table className="comparison-table">
+                        <thead>
+                          <tr>
+                            <th>Feature</th>
+                            <th>Generic Online Workout</th>
+                            <th>Recommender System</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td>Personalisation</td>
+                            <td>Fixed plan for general users</td>
+                            <td>
+                              Uses profile data such as fitness level, goal, and
+                              equipment
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>Injury Awareness</td>
+                            <td>No filtering for injury constraints</td>
+                            <td>
+                              Filters unsuitable exercises when injury data is
+                              present
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>Age Adjustment</td>
+                            <td>Same structure for all age groups</td>
+                            <td>
+                              Adjusts workout structure when age-based caution is
+                              needed
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>History Awareness</td>
+                            <td>Static workout with no memory</td>
+                            <td>
+                              Uses previous recommendations and logs to support
+                              smarter selection
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>Explanation</td>
+                            <td>
+                              No reason given for why the workout fits the user
+                            </td>
+                            <td>
+                              Provides recommendation reason and visible applied
+                              constraints
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <p className="comparison-conclusion">
+                      This demonstrates that the recommender system adds measurable
+                      value by adapting workouts to the user instead of showing the
+                      same static routine to everyone.
+                    </p>
                   </div>
 
                   <p className="subtle-text" style={{ marginTop: 0 }}>
