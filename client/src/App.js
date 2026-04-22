@@ -500,9 +500,11 @@ function App() {
             <p className="eyebrow">Smart Recommendation Engine</p>
             <h2>Personalised lower-body workouts with evaluation-driven comparison</h2>
             <p className="hero-text">
-              Generate profile-aware workout options, select a personalised plan,
-              log workout outcomes, and compare performance using completion,
-              suitability, structure, enjoyment, and difficulty feedback.
+              Generate knowledge-based, profile-aware workout plans with integrated
+              warm-ups, tailored exercise selection, and intelligent constraint
+              handling. The system adapts to fitness level, goals, equipment, age,
+              and injury status to deliver safer, more effective training compared
+              to generic online workouts.
             </p>
           </div>
 
@@ -513,7 +515,7 @@ function App() {
             </div>
             <div className="stat-card">
               <span>Recommendation Mode</span>
-              <strong>Rule-Based</strong>
+              <strong>Knowledge-Based (Rule-Based)</strong>
             </div>
             <div className="stat-card">
               <span>Constraint Awareness</span>
