@@ -114,9 +114,7 @@ function EvaluationResults({ refreshKey, token }) {
 
             <h3 className="activity-highlight-title">Evaluation Summary</h3>
 
-            <p className="activity-highlight-text">
-              {systemInsight}
-            </p>
+            <p className="activity-highlight-text">{systemInsight}</p>
           </div>
 
           <div className="stats-grid">
@@ -221,39 +219,45 @@ function EvaluationResults({ refreshKey, token }) {
 
               <div className="summary-lines">
                 <p>
-                  <strong>Main Insight:</strong> {systemInsight}
+                  <strong>What this means:</strong> The personalised recommendation
+                  logic is being evaluated using completion, suitability,
+                  enjoyment, structure, and perceived difficulty.
                 </p>
                 <p>
-                  <strong>Interpretation:</strong> These results summarise how
-                  well the personalised recommendation logic is matching user
-                  needs based on completion, suitability, enjoyment, structure,
-                  and perceived difficulty.
-                </p>
-                <p>
-                  <strong>Research Value:</strong> This supports the evaluation
-                  of whether the personalised system is producing workouts that
-                  are practical, appropriate, and positively received by users.
+                  <strong>Research value:</strong> These results help show whether
+                  the knowledge-based system is producing workouts that are
+                  practical, appropriate, and positively received by users.
                 </p>
               </div>
 
               <div className="difficulty-box">
                 <h4>Key Signals</h4>
+
                 <div className="difficulty-row">
                   <span>Completion</span>
                   <span className="badge badge-light">
                     {fmt(personalised?.completionRate, "%")}
                   </span>
                 </div>
+
                 <div className="difficulty-row">
                   <span>Suitability</span>
                   <span className="badge badge-light">
                     {fmt(personalised?.avgSuitability)}
                   </span>
                 </div>
+
                 <div className="difficulty-row">
                   <span>Enjoyment</span>
                   <span className="badge badge-light">
                     {fmt(personalised?.avgEnjoyment)}
+                  </span>
+                </div>
+
+                <div className="difficulty-row">
+                  <span>Structure</span>
+                  <span className="badge badge-light">
+                    {fmt(personalised?.avgStructure)}
                   </span>
                 </div>
               </div>

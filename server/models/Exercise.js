@@ -23,7 +23,7 @@ const exerciseSchema = new mongoose.Schema(
       enum: ["gym", "dumbbells", "bodyweight"],
       required: true,
     },
-    instructionUrl: {
+    instructions: {
       type: String,
       trim: true,
       default: "",

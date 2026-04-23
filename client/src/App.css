@@ -1872,3 +1872,823 @@ a {
   line-height: 1.5;
 }
 
+.exercise-toggle-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #2f6fed;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.exercise-toggle-btn:hover {
+  text-decoration: underline;
+}
+
+.exercise-details {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border: 1px solid #dbe4f0;
+  border-radius: 12px;
+  background: #f8fbff;
+}
+
+.exercise-details p {
+  margin: 0;
+  color: #334155;
+  line-height: 1.5;
+}
+
+.compact-history-top {
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.history-summary-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.compact-history-metrics {
+  margin-top: 12px;
+}
+
+.history-details {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #dbe4f0;
+}
+
+.compact-topbar {
+  padding: 16px 20px;
+  margin-bottom: 18px;
+}
+
+.topbar-summary {
+  margin-top: 6px;
+  margin-bottom: 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.dashboard-intro-panel {
+  margin-bottom: 20px;
+}
+
+.dashboard-actions-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.mini-action-card {
+  background: #f8fbff;
+  border: 1px solid #dbe4f0;
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.mini-action-card strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #0f172a;
+}
+
+.mini-action-card p {
+  margin: 0;
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.compact-comparison-card {
+  margin-bottom: 18px;
+}
+
+/* =========================
+   TOPBAR POLISH
+========================= */
+
+.compact-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: 22px;
+  padding: 22px 24px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.22) 100%);
+  border: 1px solid rgba(219, 227, 238, 0.72);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+}
+
+.topbar-main {
+  max-width: 760px;
+}
+
+.compact-topbar .eyebrow {
+  margin-bottom: 10px;
+}
+
+.compact-topbar h1 {
+  margin: 0;
+  font-size: 3.2rem;
+  line-height: 0.98;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+
+.topbar-description {
+  margin: 12px 0 14px;
+  color: #475569;
+  font-size: 1rem;
+  line-height: 1.6;
+  max-width: 720px;
+}
+
+.topbar-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.topbar-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid #dbe4f0;
+  color: #1e3a8a;
+  font-size: 0.84rem;
+  font-weight: 800;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.04);
+}
+
+/* =========================
+   DASHBOARD CARD POLISH
+========================= */
+
+.dashboard-workspace {
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-generate-btn {
+  min-width: 260px;
+}
+
+.dashboard-main-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 18px;
+}
+
+.dashboard-feature-card {
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  border: 1px solid #dfe7f1;
+  border-radius: 24px;
+  padding: 22px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+  position: relative;
+}
+
+.dashboard-feature-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  font-size: 1.1rem;
+  margin-bottom: 14px;
+}
+
+.dashboard-feature-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.dashboard-feature-header h3 {
+  margin: 0;
+  font-size: 1.45rem;
+  color: #0f172a;
+}
+
+.dashboard-summary-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.dashboard-summary-stat,
+.dashboard-summary-source {
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: #f8fbff;
+  border: 1px solid #dfe7f1;
+}
+
+.dashboard-summary-source {
+  margin-bottom: 14px;
+}
+
+.dashboard-summary-label {
+  display: block;
+  margin-bottom: 8px;
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.dashboard-summary-stat strong,
+.dashboard-summary-source strong {
+  color: #0f172a;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.dashboard-highlight-note {
+  margin-bottom: 14px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.compact-preview {
+  gap: 10px;
+}
+
+.dashboard-session-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dashboard-session-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 13px 14px;
+  border-radius: 16px;
+  background: #f8fbff;
+  border: 1px solid #e0e8f2;
+}
+
+.dashboard-session-row span:first-child {
+  color: #475569;
+  font-weight: 800;
+}
+
+.dashboard-session-row strong {
+  color: #0f172a;
+  font-weight: 900;
+}
+
+/* =========================
+   RESPONSIVE POLISH
+========================= */
+
+@media (max-width: 900px) {
+  .compact-topbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .compact-topbar h1 {
+    font-size: 2.5rem;
+  }
+
+  .dashboard-main-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .compact-topbar {
+    padding: 18px;
+    border-radius: 20px;
+  }
+
+  .compact-topbar h1 {
+    font-size: 2.1rem;
+  }
+
+  .topbar-description {
+    font-size: 0.95rem;
+  }
+
+  .topbar-chips {
+    gap: 8px;
+  }
+
+  .topbar-chip {
+    font-size: 0.8rem;
+    padding: 7px 10px;
+  }
+
+  .dashboard-feature-card {
+    padding: 18px;
+    border-radius: 20px;
+  }
+
+  .dashboard-summary-row {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-generate-btn {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+/* PRODUCT-READY COMPACT HEADER */
+.compact-topbar {
+  padding: 18px 22px;
+  margin-bottom: 18px;
+  border-radius: 22px;
+}
+
+.compact-topbar h1 {
+  font-size: 2.55rem;
+}
+
+.topbar-description {
+  margin: 8px 0 12px;
+  font-size: 0.95rem;
+  max-width: 680px;
+}
+
+.topbar-chips {
+  gap: 8px;
+}
+
+.topbar-chip {
+  padding: 7px 11px;
+  font-size: 0.8rem;
+}
+
+/* SHRINK OVERVIEW SECTION */
+.dashboard-intro-panel {
+  padding: 22px;
+  margin-bottom: 18px;
+}
+
+.dashboard-intro-panel .panel-header {
+  margin-bottom: 14px;
+}
+
+.dashboard-actions-summary {
+  gap: 12px;
+}
+
+.mini-action-card {
+  padding: 13px 14px;
+}
+
+.mini-action-card p {
+  font-size: 13px;
+}
+
+/* MAKE WORKOUT GENERATION FEEL MORE PRODUCT READY */
+.compact-comparison-card {
+  padding: 18px;
+  box-shadow: none;
+}
+
+.comparison-conclusion {
+  font-size: 0.95rem;
+}
+
+.panel {
+  margin-bottom: 20px;
+}
+
+body {
+  background:
+    radial-gradient(circle at top right, rgba(37, 99, 235, 0.10), transparent 24%),
+    linear-gradient(180deg, #eef3fa 0%, #f7f9fc 45%, #eef2f7 100%);
+}
+
+/* wider, cleaner product layout */
+.main-content {
+  max-width: 1320px;
+  padding: 26px 28px 56px;
+}
+
+/* premium sidebar */
+.sidebar {
+  background:
+    radial-gradient(circle at top left, rgba(59, 130, 246, 0.18), transparent 22%),
+    linear-gradient(180deg, #050914 0%, #0b1220 52%, #111827 100%);
+  padding: 30px 22px;
+}
+
+.brand-logo {
+  border-radius: 999px;
+  background: linear-gradient(135deg, #2563eb 0%, #60a5fa 100%);
+}
+
+.nav-link {
+  border-radius: 20px;
+  padding: 16px 18px;
+  font-size: 1rem;
+}
+
+.nav-link.active {
+  background: #ffffff;
+  color: #050914;
+}
+
+/* hero header */
+.compact-topbar {
+  position: relative;
+  overflow: hidden;
+  padding: 34px 36px;
+  margin-bottom: 24px;
+  border-radius: 34px;
+  background:
+    radial-gradient(circle at top right, rgba(37, 99, 235, 0.16), transparent 30%),
+    linear-gradient(135deg, #ffffff 0%, #eef5ff 100%);
+  border: 1px solid rgba(203, 213, 225, 0.8);
+  box-shadow: 0 24px 55px rgba(15, 23, 42, 0.10);
+}
+
+.compact-topbar::after {
+  content: "";
+  position: absolute;
+  right: -80px;
+  bottom: -120px;
+  width: 360px;
+  height: 360px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.compact-topbar h1 {
+  font-size: 4rem;
+  letter-spacing: -0.065em;
+}
+
+.topbar-description {
+  max-width: 760px;
+  font-size: 1.05rem;
+  color: #334155;
+}
+
+.topbar-chip {
+  background: #ffffff;
+  border: 1px solid #dbeafe;
+  color: #1e3a8a;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+}
+
+.topbar-pill {
+  z-index: 1;
+}
+
+/* panels */
+.panel,
+.card {
+  border-radius: 34px;
+  padding: 30px;
+  box-shadow: 0 24px 55px rgba(15, 23, 42, 0.08);
+}
+
+.panel-kicker,
+.eyebrow {
+  color: #2563eb;
+  letter-spacing: 0.12em;
+}
+
+/* overview cards */
+.dashboard-actions-summary {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.mini-action-card {
+  min-height: 130px;
+  padding: 22px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.mini-action-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 35px rgba(15, 23, 42, 0.08);
+}
+
+.mini-action-card strong {
+  font-size: 1.05rem;
+}
+
+/* product comparison card */
+.comparison-card {
+  border-radius: 28px;
+  padding: 24px;
+  background:
+    radial-gradient(circle at top right, rgba(34, 197, 94, 0.10), transparent 26%),
+    linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.comparison-conclusion {
+  background: #f1f5f9;
+  border-radius: 20px;
+  padding: 18px 20px;
+}
+
+.comparison-link {
+  color: #2563eb;
+  font-weight: 900;
+  text-decoration: underline;
+}
+
+/* workout option cards */
+.personalised-options-grid {
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 22px;
+}
+
+.personalised-option-card {
+  border-radius: 30px;
+  padding: 24px;
+  box-shadow: 0 22px 44px rgba(15, 23, 42, 0.08);
+}
+
+.personalised-option-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 28px 60px rgba(15, 23, 42, 0.12);
+}
+
+/* buttons */
+.btn-primary {
+  border-radius: 999px;
+  padding: 14px 22px;
+  background: linear-gradient(135deg, #111827 0%, #2563eb 100%);
+  box-shadow: 0 16px 30px rgba(37, 99, 235, 0.25);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #020617 0%, #1d4ed8 100%);
+}
+
+/* selected workout + feedback */
+.workout-box,
+.card-soft {
+  border-radius: 28px;
+}
+
+.exercise-item,
+.dashboard-exercise-row {
+  border-radius: 22px;
+}
+
+/* optional bottom dashboard card, if kept */
+.dashboard-bottom-summary {
+  opacity: 0.95;
+}
+
+/* mobile */
+@media (max-width: 1000px) {
+  .dashboard-actions-summary {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .compact-topbar h1 {
+    font-size: 3rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .main-content {
+    padding: 18px 14px 40px;
+  }
+
+  .dashboard-actions-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .compact-topbar {
+    padding: 24px;
+  }
+
+  .compact-topbar h1 {
+    font-size: 2.45rem;
+  }
+}
+
+.product-hero-panel {
+  display: grid;
+  grid-template-columns: 1.35fr 0.65fr;
+  gap: 24px;
+  align-items: stretch;
+  background:
+    radial-gradient(circle at top right, rgba(37, 99, 235, 0.18), transparent 28%),
+    linear-gradient(135deg, #ffffff 0%, #eef5ff 100%);
+}
+
+.product-hero-content h3 {
+  font-size: 2.4rem;
+  max-width: 760px;
+  line-height: 1.05;
+}
+
+.product-hero-content p {
+  max-width: 760px;
+  color: #475569;
+  line-height: 1.7;
+}
+
+.product-hero-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+.product-link-btn {
+  background: #ffffff;
+  border: 1px solid #dbe4f0;
+  color: #0f172a;
+  border-radius: 999px;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06);
+  text-decoration: none;
+}
+
+.product-hero-stats {
+  display: grid;
+  gap: 14px;
+}
+
+.product-hero-stats div {
+  padding: 18px;
+  border-radius: 24px;
+  background: #ffffff;
+  border: 1px solid #dbe4f0;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.06);
+}
+
+.product-hero-stats span {
+  display: block;
+  margin-bottom: 8px;
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.product-hero-stats strong {
+  color: #0f172a;
+  font-size: 1.1rem;
+  text-transform: capitalize;
+}
+
+@media (max-width: 900px) {
+  .product-hero-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .product-hero-content h3 {
+    font-size: 1.9rem;
+  }
+}
+
+/* =========================
+   OPTION 1: REDUCED DASHBOARD TITLE
+========================= */
+
+.compact-topbar {
+  padding: 24px 30px;
+  margin-bottom: 22px;
+  border-radius: 30px;
+}
+
+.compact-topbar h1 {
+  font-size: 2.4rem;
+  line-height: 1.05;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+.topbar-description {
+  margin: 10px 0 14px;
+  font-size: 0.98rem;
+  line-height: 1.55;
+  max-width: 720px;
+}
+
+.topbar-chips {
+  gap: 8px;
+}
+
+.topbar-chip {
+  padding: 7px 11px;
+  font-size: 0.8rem;
+}
+
+@media (max-width: 1000px) {
+  .compact-topbar h1 {
+    font-size: 2.2rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .compact-topbar {
+    padding: 20px;
+  }
+
+  .compact-topbar h1 {
+    font-size: 1.9rem;
+  }
+}
+
+.exercise-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.exercise-card {
+  background: #ffffff;
+  border: 1px solid #dbe3ee;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 18px 35px rgba(15, 23, 42, 0.08);
+}
+
+.exercise-image-placeholder {
+  height: 150px;
+  background: linear-gradient(135deg, #eaf1ff, #f8fafc);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid #dbe3ee;
+}
+
+.exercise-image-placeholder span {
+  width: 72px;
+  height: 72px;
+  border-radius: 22px;
+  background: #2563eb;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: -1px;
+}
+
+.exercise-card-body {
+  padding: 20px;
+}
+
+.exercise-card .exercise-item-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.exercise-card h3 {
+  margin: 0;
+  font-size: 20px;
+  color: #0f172a;
+}
+
+.exercise-meta {
+  margin-top: 14px;
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+  color: #475569;
+}
+
+.exercise-details {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #e2e8f0;
+  color: #475569;
+  line-height: 1.6;
+}
+
+

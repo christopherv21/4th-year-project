@@ -19,19 +19,14 @@ export default function RecentActivity({ latestLog }) {
 
   const workoutType = recommendation?.workoutType || "-";
   const sourceName = recommendation?.sourceName || "-";
-  const sourceUrl = recommendation?.sourceUrl || "";
-
   const completed =
     latestLog == null ? "-" : latestLog.completed ? "Completed" : "Not completed";
 
   const difficulty = latestLog?.difficultyFeedback || "-";
-  const suitability = latestLog?.suitabilityRating ?? "-";
-  const structure = latestLog?.structureRating ?? "-";
-  const enjoyment = latestLog?.enjoymentRating ?? "-";
   const duration = latestLog?.durationActual ?? "-";
 
   const date = latestLog?.createdAt
-    ? new Date(latestLog.createdAt).toLocaleString()
+    ? new Date(latestLog.createdAt).toLocaleDateString()
     : "-";
 
   const difficultyBadgeClass =
@@ -55,18 +50,17 @@ export default function RecentActivity({ latestLog }) {
       {!latestLog ? (
         <div className="empty-state">
           <p style={{ marginTop: 0, marginBottom: 6, fontWeight: 700 }}>
-            No workout activity recorded yet.
+            No recent activity yet.
           </p>
           <p style={{ margin: 0 }}>
-            Complete and submit a workout to generate your first performance
-            summary.
+            Submit a workout evaluation to show your latest activity here.
           </p>
         </div>
       ) : (
         <>
           <div className="activity-highlight">
             <div className="activity-highlight-top">
-              <span className="activity-highlight-label">Latest Workout</span>
+              <span className="activity-highlight-label">Recent Activity</span>
               <span className={workoutBadgeClass}>
                 {formatWorkoutType(workoutType)}
               </span>
@@ -75,33 +69,16 @@ export default function RecentActivity({ latestLog }) {
             <h3 className="activity-highlight-title">{completed}</h3>
 
             <p className="activity-highlight-text">
-              {completed === "Completed"
-                ? "Your most recent session was completed and recorded successfully."
-                : "Your most recent session was logged but not completed."}
+              {date} • {sourceName}
             </p>
           </div>
 
           <div className="snapshot-grid" style={{ marginTop: 16 }}>
             <div className="snapshot-item">
-              <span className="snapshot-label">Difficulty Feedback</span>
+              <span className="snapshot-label">Difficulty</span>
               <span className={difficultyBadgeClass}>
                 {formatDifficultyLabel(difficulty)}
               </span>
-            </div>
-
-            <div className="snapshot-item">
-              <span className="snapshot-label">Suitability</span>
-              <span className="snapshot-value">{suitability} / 5</span>
-            </div>
-
-            <div className="snapshot-item">
-              <span className="snapshot-label">Structure</span>
-              <span className="snapshot-value">{structure} / 5</span>
-            </div>
-
-            <div className="snapshot-item">
-              <span className="snapshot-label">Enjoyment</span>
-              <span className="snapshot-value">{enjoyment} / 5</span>
             </div>
 
             <div className="snapshot-item">
@@ -109,27 +86,6 @@ export default function RecentActivity({ latestLog }) {
               <span className="snapshot-value">
                 {duration === "-" ? "-" : `${duration} min`}
               </span>
-            </div>
-
-            <div className="snapshot-item snapshot-item-wide">
-              <span className="snapshot-label">Workout Source</span>
-              <span className="snapshot-value">
-                {sourceName}
-                {sourceUrl && (
-                  <>
-                    {" "}
-                    •{" "}
-                    <a href={sourceUrl} target="_blank" rel="noreferrer">
-                      View source
-                    </a>
-                  </>
-                )}
-              </span>
-            </div>
-
-            <div className="snapshot-item snapshot-item-wide">
-              <span className="snapshot-label">Date & Time</span>
-              <span className="snapshot-value">{date}</span>
             </div>
           </div>
         </>

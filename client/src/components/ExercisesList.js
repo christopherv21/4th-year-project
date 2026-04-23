@@ -9,6 +9,13 @@ export default function ExercisesList({ exercises = [] }) {
     );
   }
 
+  const formatLabel = (value) => {
+    if (!value) return "";
+    return String(value)
+      .replaceAll("_", " ")
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+  };
+
   return (
     <div className="exercise-list">
       {exercises.map((ex, idx) => {
@@ -18,7 +25,11 @@ export default function ExercisesList({ exercises = [] }) {
         const sets = ex.sets ?? ex.prescribedSets;
         const reps = ex.reps ?? ex.prescribedReps;
         const restSeconds = ex.restSeconds ?? ex.rest ?? null;
-        const instructionUrl = ex.instructionUrl || "";
+
+        const muscleGroup = ex.muscleGroup || "";
+        const category = ex.category || "";
+        const equipment = ex.equipment || "";
+        const instructions = ex.instructions || "";
 
         return (
           <div key={id} className="exercise-item">
@@ -26,39 +37,41 @@ export default function ExercisesList({ exercises = [] }) {
               <h3>{name}</h3>
 
               <div className="exercise-badges">
-                {sets != null && <span className="badge badge-dark">{sets} sets</span>}
-                {reps != null && <span className="badge badge-light">{reps} reps</span>}
+                {sets != null && (
+                  <span className="badge badge-dark">{sets} sets</span>
+                )}
+                {reps != null && (
+                  <span className="badge badge-light">{reps} reps</span>
+                )}
                 {restSeconds != null && (
                   <span className="badge badge-light">{restSeconds}s rest</span>
                 )}
               </div>
             </div>
 
-            {(ex.muscleGroup || ex.equipment || ex.category) && (
+            {(muscleGroup || category || equipment) && (
               <div className="exercise-meta">
-                {ex.muscleGroup && (
+                {muscleGroup && (
                   <span>
-                    <strong>Muscle:</strong> {ex.muscleGroup}
+                    <strong>Muscle:</strong> {formatLabel(muscleGroup)}
                   </span>
                 )}
-                {ex.category && (
+                {category && (
                   <span>
-                    <strong>Category:</strong> {ex.category}
+                    <strong>Category:</strong> {formatLabel(category)}
                   </span>
                 )}
-                {ex.equipment && (
+                {equipment && (
                   <span>
-                    <strong>Equipment:</strong> {ex.equipment}
+                    <strong>Equipment:</strong> {formatLabel(equipment)}
                   </span>
                 )}
               </div>
             )}
 
-            {instructionUrl && (
-              <div className="exercise-link">
-                <a href={instructionUrl} target="_blank" rel="noreferrer">
-                  View exercise instructions
-                </a>
+            {instructions && (
+              <div className="exercise-details">
+                <p>{instructions}</p>
               </div>
             )}
           </div>
