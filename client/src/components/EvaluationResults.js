@@ -52,38 +52,6 @@ function EvaluationResults({ refreshKey, token }) {
   const totalLogs = summary?.overall?.totalLogs || 0;
   const personalised = summary?.personalised || null;
 
-  let systemInsight = "Not enough data yet to assess recommendation quality.";
-  let performanceLabel = "Limited evidence";
-
-  if (totalLogs > 0) {
-    const completion = personalised?.completionRate ?? 0;
-    const suitability = personalised?.avgSuitability ?? null;
-    const enjoyment = personalised?.avgEnjoyment ?? null;
-    const justRight = personalised?.difficultyPercentages?.just_right ?? 0;
-
-    if (completion >= 80 && justRight >= 60) {
-      performanceLabel = "Strong performance";
-      systemInsight =
-        "The recommendation rules are currently producing strong completion and difficulty-match results.";
-    } else if (completion >= 60) {
-      performanceLabel = "Promising performance";
-      systemInsight =
-        "The recommendation rules are producing promising results, although more user feedback would help refine workout fit further.";
-    } else {
-      performanceLabel = "Needs refinement";
-      systemInsight =
-        "The recorded sessions suggest the recommendation rules may need further tuning to improve workout suitability.";
-    }
-
-    if (suitability !== null && suitability >= 4) {
-      systemInsight += " Suitability ratings are also trending positively.";
-    }
-
-    if (enjoyment !== null && enjoyment >= 4) {
-      systemInsight += " Enjoyment scores indicate a positive user response.";
-    }
-  }
-
   return (
     <div>
       {loading && <p className="status-text">Loading evaluation results...</p>}
@@ -104,19 +72,6 @@ function EvaluationResults({ refreshKey, token }) {
 
       {!loading && !errMsg && totalLogs > 0 && (
         <div className="evaluation-layout">
-          <div className="activity-highlight">
-            <div className="activity-highlight-top">
-              <span className="activity-highlight-label">
-                Recommendation Performance
-              </span>
-              <span className="badge badge-success">{performanceLabel}</span>
-            </div>
-
-            <h3 className="activity-highlight-title">Evaluation Summary</h3>
-
-            <p className="activity-highlight-text">{systemInsight}</p>
-          </div>
-
           <div className="stats-grid">
             <div className="stat-card">
               <span className="stat-label">Total Logs</span>
@@ -219,14 +174,14 @@ function EvaluationResults({ refreshKey, token }) {
 
               <div className="summary-lines">
                 <p>
-                  <strong>What this means:</strong> The personalised recommendation
-                  logic is being evaluated using completion, suitability,
-                  enjoyment, structure, and perceived difficulty.
+                  <strong>Evaluation method:</strong> The system is evaluated
+                  using completion rate, suitability, enjoyment, structure, and
+                  perceived difficulty.
                 </p>
                 <p>
-                  <strong>Research value:</strong> These results help show whether
-                  the knowledge-based system is producing workouts that are
-                  practical, appropriate, and positively received by users.
+                  <strong>Research value:</strong> These metrics help demonstrate
+                  whether the personalised rule-based recommender produces
+                  practical and appropriate workouts for users.
                 </p>
               </div>
 

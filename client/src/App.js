@@ -572,7 +572,6 @@ function App() {
             {profile && (
               <div className="topbar-chips">
                 <span className="topbar-chip">{profile.fitnessLevel}</span>
-                <span className="topbar-chip">{profile.goal}</span>
                 <span className="topbar-chip">{profile.equipment}</span>
                 {profile.age && (
                   <span className="topbar-chip">Age {profile.age}</span>
@@ -1118,11 +1117,10 @@ function App() {
 
                 <div className="card-soft" style={{ marginBottom: 18 }}>
                   <div>
-                    <b>Current Profile:</b> {profile?.fitnessLevel} |{" "}
-                    {profile?.goal} | {profile?.equipment}
-                    {profile?.age ? ` | age ${profile.age}` : ""}
-                    {profile?.injury ? ` | injury ${profile.injury}` : ""}
-                  </div>
+                <b>Current Profile:</b> {profile?.fitnessLevel} | {profile?.equipment}
+                {profile?.age ? ` | age ${profile.age}` : ""}
+                {profile?.injury ? ` | injury ${profile.injury}` : ""}
+                </div>
                 </div>
 
                 <ProfileSetup
