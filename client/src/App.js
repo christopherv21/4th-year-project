@@ -500,8 +500,7 @@ function App() {
             <p className="eyebrow">Smart Recommendation Engine</p>
             <h2>Personalised lower-body workouts with evaluation-driven comparison</h2>
             <p className="hero-text">
-              Generate knowledge-based, profile-aware workout plans with integrated
-              warm-ups, tailored exercise selection, and intelligent constraint
+              Generate knowledge-based, profile-aware workout plans with tailored exercise selection and intelligent constraint
               handling. The system adapts to fitness level, goals, equipment, age,
               and injury status to deliver safer, more effective training compared
               to generic online workouts.
