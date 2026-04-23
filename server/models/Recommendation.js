@@ -31,6 +31,37 @@ const recommendationExerciseSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const warmupItemSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    sets: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+    reps: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    note: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    order: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+  },
+  { _id: false }
+);
+
 const recommendationSchema = new mongoose.Schema(
   {
     userId: {
@@ -67,6 +98,15 @@ const recommendationSchema = new mongoose.Schema(
       type: String,
       trim: true,
       default: "",
+    },
+    reason: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    warmup: {
+      type: [warmupItemSchema],
+      default: [],
     },
     exercises: {
       type: [recommendationExerciseSchema],

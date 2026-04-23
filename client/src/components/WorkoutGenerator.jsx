@@ -2,6 +2,35 @@ import React, { useState } from "react";
 
 const API_BASE = "https://fourth-year-project-8fyo.onrender.com";
 
+const sectionTitleStyle = {
+  marginTop: "14px",
+  marginBottom: "8px",
+  fontSize: "15px",
+  fontWeight: "600",
+};
+
+const listStyle = {
+  margin: 0,
+  paddingLeft: "20px",
+};
+
+const cardStyle = {
+  marginBottom: "20px",
+  padding: "15px",
+  border: "1px solid #ddd",
+  borderRadius: "8px",
+  backgroundColor: "#fff",
+};
+
+const warmupBoxStyle = {
+  marginTop: "14px",
+  marginBottom: "14px",
+  padding: "12px",
+  border: "1px solid #e5e7eb",
+  borderRadius: "8px",
+  backgroundColor: "#f9fafb",
+};
+
 const WorkoutGenerator = () => {
   const [options, setOptions] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -49,15 +78,7 @@ const WorkoutGenerator = () => {
           <h3>Workout Options</h3>
 
           {options.map((option, index) => (
-            <div
-              key={index}
-              style={{
-                marginBottom: "20px",
-                padding: "15px",
-                border: "1px solid #ddd",
-                borderRadius: "8px",
-              }}
-            >
+            <div key={index} style={cardStyle}>
               <h4>{option.label}</h4>
 
               <p>{option.description}</p>
@@ -73,9 +94,34 @@ const WorkoutGenerator = () => {
                 {option.prescription.reps} reps
               </p>
 
-              <ul>
+              {option.reason && (
+                <p style={{ fontSize: "13px", color: "#555", marginTop: "8px" }}>
+                  <strong>Why this was recommended:</strong> {option.reason}
+                </p>
+              )}
+
+              {option.warmup?.length > 0 && (
+                <div style={warmupBoxStyle}>
+                  <h5 style={{ margin: "0 0 10px 0" }}>Warm-Up</h5>
+                  <ul style={listStyle}>
+                    {option.warmup.map((item) => (
+                      <li key={item.order} style={{ marginBottom: "8px" }}>
+                        <strong>{item.name}</strong> — {item.sets} sets × {item.reps}
+                        {item.note ? (
+                          <div style={{ fontSize: "12px", color: "#666", marginTop: "2px" }}>
+                            {item.note}
+                          </div>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <h5 style={sectionTitleStyle}>Main Exercises</h5>
+              <ul style={listStyle}>
                 {option.exercises.map((ex, i) => (
-                  <li key={i}>
+                  <li key={i} style={{ marginBottom: "6px" }}>
                     {ex.name} — {ex.sets} sets × {ex.reps} reps
                   </li>
                 ))}

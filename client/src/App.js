@@ -635,6 +635,9 @@ function App() {
                       <span className="feature-badge feature-yes">
                         Explanation
                       </span>
+                      <span className="feature-badge feature-yes">
+                        Warm-Up Personalisation
+                      </span>
                     </div>
 
                     <div className="comparison-table-wrap">
@@ -669,6 +672,14 @@ function App() {
                             <td>
                               Adjusts workout structure when age-based caution is
                               needed
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>Warm-Up Logic</td>
+                            <td>Usually generic or missing</td>
+                            <td>
+                              Adds goal-based, equipment-aware, injury-aware, and
+                              age-aware warm-up guidance
                             </td>
                           </tr>
                           <tr>
@@ -775,6 +786,12 @@ function App() {
                                   </span>
                                 )}
 
+                                {option.warmup?.length > 0 && (
+                                  <span className="badge badge-light">
+                                    Personalised warm-up included
+                                  </span>
+                                )}
+
                                 <span className="badge badge-light">
                                   Goal-based structure
                                 </span>
@@ -795,6 +812,34 @@ function App() {
                           </div>
 
                           <hr className="option-divider" />
+
+                          {option.warmup?.length > 0 && (
+                            <>
+                              <h4 className="option-exercises-title">Warm-Up</h4>
+
+                              <div className="card-soft" style={{ marginBottom: 16 }}>
+                                <ul style={{ margin: 0, paddingLeft: "20px" }}>
+                                  {option.warmup.map((item) => (
+                                    <li key={item.order} style={{ marginBottom: "10px" }}>
+                                      <strong>{item.name}</strong> — {item.sets} sets ×{" "}
+                                      {item.reps}
+                                      {item.note ? (
+                                        <div
+                                          style={{
+                                            fontSize: "12px",
+                                            color: "#64748b",
+                                            marginTop: "4px",
+                                          }}
+                                        >
+                                          {item.note}
+                                        </div>
+                                      ) : null}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            </>
+                          )}
 
                           <h4 className="option-exercises-title">Exercises</h4>
 
@@ -824,6 +869,45 @@ function App() {
                           {recommendedRec?.workoutType} Lower-Body Workout
                         </h3>
 
+                        {recommendedRec?.reason && (
+                          <p
+                            style={{
+                              fontSize: "13px",
+                              color: "#64748b",
+                              marginTop: "8px",
+                            }}
+                          >
+                            <strong>Recommendation Reason:</strong>{" "}
+                            {recommendedRec.reason}
+                          </p>
+                        )}
+
+                        {recommendedRec?.warmup?.length > 0 && (
+                          <div className="card-soft" style={{ marginTop: 16, marginBottom: 16 }}>
+                            <h4 style={{ marginTop: 0 }}>Warm-Up</h4>
+                            <ul style={{ margin: 0, paddingLeft: "20px" }}>
+                              {recommendedRec.warmup.map((item) => (
+                                <li key={item.order} style={{ marginBottom: "10px" }}>
+                                  <strong>{item.name}</strong> — {item.sets} sets ×{" "}
+                                  {item.reps}
+                                  {item.note ? (
+                                    <div
+                                      style={{
+                                        fontSize: "12px",
+                                        color: "#64748b",
+                                        marginTop: "4px",
+                                      }}
+                                    >
+                                      {item.note}
+                                    </div>
+                                  ) : null}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        <h4>Main Exercises</h4>
                         <ExercisesList exercises={recommendedExercises} />
                       </div>
 

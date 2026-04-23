@@ -264,7 +264,196 @@ const getWorkoutDescription = (goal) => {
   return "A lower-body workout focused on muscular endurance using higher repetitions, repeatable effort, and manageable lower-body training volume.";
 };
 
-const buildReasonText = ({ profile, goal, exerciseCount, selected }) => {
+// --------------------
+// WARM-UP LOGIC
+// --------------------
+const addWarmupItem = (warmup, item, seenNames) => {
+  if (!item || !item.name) return;
+
+  const key = item.name.toLowerCase();
+  if (seenNames.has(key)) return;
+
+  warmup.push(item);
+  seenNames.add(key);
+};
+
+const buildWarmup = ({ goal, equipment, injury = "none", age = 18 }) => {
+  const warmup = [];
+  const seenNames = new Set();
+
+  // Goal-based warm-up
+  if (goal === "strength") {
+    addWarmupItem(
+      warmup,
+      { name: "Bodyweight Squats", sets: 2, reps: "8-10", note: "Raise lower-body temperature and prepare for compound lifts." },
+      seenNames
+    );
+    addWarmupItem(
+      warmup,
+      { name: "Glute Bridges", sets: 2, reps: "10-12", note: "Activate glutes before the main workout." },
+      seenNames
+    );
+    addWarmupItem(
+      warmup,
+      { name: "Leg Swings", sets: 2, reps: "10 each leg", note: "Improve hip mobility before heavier work." },
+      seenNames
+    );
+  } else if (goal === "hypertrophy") {
+    addWarmupItem(
+      warmup,
+      { name: "Bodyweight Squats", sets: 2, reps: "10-12", note: "Prepare the legs through controlled range of motion." },
+      seenNames
+    );
+    addWarmupItem(
+      warmup,
+      { name: "Glute Bridges", sets: 2, reps: "12", note: "Activate glutes and posterior chain." },
+      seenNames
+    );
+    addWarmupItem(
+      warmup,
+      { name: "Leg Swings", sets: 2, reps: "12 each leg", note: "Increase lower-body mobility and readiness." },
+      seenNames
+    );
+  } else {
+    addWarmupItem(
+      warmup,
+      { name: "Marching in Place", sets: 2, reps: "30 sec", note: "Gradually raise heart rate for endurance work." },
+      seenNames
+    );
+    addWarmupItem(
+      warmup,
+      { name: "High Knees", sets: 2, reps: "20 sec", note: "Add dynamic lower-body movement and tempo." },
+      seenNames
+    );
+    addWarmupItem(
+      warmup,
+      { name: "Bodyweight Squats", sets: 2, reps: "12", note: "Prepare the lower body for repeated effort." },
+      seenNames
+    );
+  }
+
+  // Equipment-based warm-up addition
+  if (equipment === "gym") {
+    addWarmupItem(
+      warmup,
+      { name: "Light Stationary Bike", sets: 1, reps: "3 min", note: "Use gym equipment to raise temperature with low-impact movement." },
+      seenNames
+    );
+  }
+
+  if (equipment === "dumbbells") {
+    addWarmupItem(
+      warmup,
+      { name: "Light Dumbbell Goblet Hold", sets: 1, reps: "30 sec", note: "Prepare posture and bracing with light resistance." },
+      seenNames
+    );
+  }
+
+  if (equipment === "bodyweight") {
+    addWarmupItem(
+      warmup,
+      { name: "Arm Swings and Marching", sets: 1, reps: "45 sec", note: "Simple no-equipment movement to start the session." },
+      seenNames
+    );
+  }
+
+  // Injury-aware replacements / filtering
+  if (injury === "knee") {
+    const blockedKneeItems = [
+      "bodyweight squats",
+      "high knees",
+    ];
+
+    const filtered = warmup.filter(
+      (item) => !blockedKneeItems.includes(item.name.toLowerCase())
+    );
+
+    warmup.length = 0;
+    seenNames.clear();
+
+    filtered.forEach((item) => addWarmupItem(warmup, item, seenNames));
+
+    addWarmupItem(
+      warmup,
+      { name: "Supported Sit-to-Stand", sets: 2, reps: "8", note: "A safer knee-friendly movement pattern." },
+      seenNames
+    );
+    addWarmupItem(
+      warmup,
+      { name: "Standing Heel Raises", sets: 2, reps: "12", note: "Gentle lower-leg activation with low knee stress." },
+      seenNames
+    );
+    addWarmupItem(
+      warmup,
+      { name: "Glute Bridges", sets: 2, reps: "10", note: "Support lower-body activation without dynamic knee loading." },
+      seenNames
+    );
+  }
+
+  if (injury === "back") {
+    const blockedBackItems = [
+      "light dumbbell goblet hold",
+    ];
+
+    const filtered = warmup.filter(
+      (item) => !blockedBackItems.includes(item.name.toLowerCase())
+    );
+
+    warmup.length = 0;
+    seenNames.clear();
+
+    filtered.forEach((item) => addWarmupItem(warmup, item, seenNames));
+
+    addWarmupItem(
+      warmup,
+      { name: "Pelvic Tilts", sets: 2, reps: "10", note: "Promote controlled trunk and pelvic preparation." },
+      seenNames
+    );
+    addWarmupItem(
+      warmup,
+      { name: "Controlled Marching", sets: 2, reps: "20 sec", note: "Low-stress movement for gradual warm-up." },
+      seenNames
+    );
+  }
+
+  // Age-aware low-impact adjustment
+  if (age >= 50) {
+    const blockedAgeItems = ["high knees"];
+    const filtered = warmup.filter(
+      (item) => !blockedAgeItems.includes(item.name.toLowerCase())
+    );
+
+    const adjusted = filtered.map((item) => {
+      if (item.reps === "30 sec") {
+        return { ...item, reps: "20 sec" };
+      }
+
+      if (item.reps === "45 sec") {
+        return { ...item, reps: "30 sec" };
+      }
+
+      return item;
+    });
+
+    warmup.length = 0;
+    seenNames.clear();
+
+    adjusted.forEach((item) => addWarmupItem(warmup, item, seenNames));
+
+    addWarmupItem(
+      warmup,
+      { name: "Supported Marching", sets: 2, reps: "20 sec", note: "Low-impact warm-up suited to older users." },
+      seenNames
+    );
+  }
+
+  return warmup.slice(0, 4).map((item, index) => ({
+    ...item,
+    order: index + 1,
+  }));
+};
+
+const buildReasonText = ({ profile, goal, exerciseCount, selected, warmup }) => {
   const parts = [];
 
   parts.push(
@@ -275,13 +464,19 @@ const buildReasonText = ({ profile, goal, exerciseCount, selected }) => {
     `${exerciseCount} exercises were selected based on the user's available equipment (${profile.equipment}).`
   );
 
+  if (warmup && warmup.length > 0) {
+    parts.push(
+      "A personalised warm-up was included before the main exercises to support preparation and reduce injury risk."
+    );
+  }
+
   if (profile.age >= 50) {
-    parts.push("Age-aware adjustments were applied to support safer volume and exercise selection.");
+    parts.push("Age-aware adjustments were applied to support safer volume, exercise selection, and lower-impact warm-up choices.");
   }
 
   if (profile.injury && profile.injury !== "none") {
     parts.push(
-      `Injury-aware filtering was applied to reduce exercises that may aggravate a ${profile.injury} issue.`
+      `Injury-aware filtering was applied to reduce exercises and warm-up movements that may aggravate a ${profile.injury} issue.`
     );
   }
 
@@ -342,6 +537,12 @@ const buildWorkoutByGoal = ({
   const selected = [];
   const seenIds = new Set();
   const { sets, reps } = getPrescription(goal, profile.age, profile.injury);
+  const warmup = buildWarmup({
+    goal,
+    equipment: profile.equipment,
+    injury: profile.injury,
+    age: profile.age,
+  });
 
   const templates = getTemplatesByGoal(goal);
   const template = templates[Math.floor(Math.random() * templates.length)];
@@ -413,11 +614,13 @@ const buildWorkoutByGoal = ({
     description: getWorkoutDescription(goal),
     goal,
     prescription: { sets, reps },
+    warmup,
     reason: buildReasonText({
       profile,
       goal,
       exerciseCount,
       selected: selected.slice(0, exerciseCount),
+      warmup,
     }),
     exercises: formatWorkoutExercises(selected.slice(0, exerciseCount), sets, reps),
   };
@@ -550,11 +753,12 @@ const generatePersonalisedWorkoutOptions = async (req, res) => {
       },
       prescription: {
         exerciseCount,
-        note: "Each option represents a different lower-body training goal while respecting user constraints and introducing controlled variation.",
+        note: "Each option represents a different lower-body training goal while respecting user constraints, including personalised warm-up logic and controlled variation.",
       },
       constraintsApplied: {
         ageAdjusted: age >= 50,
         injuryAware: injury !== "none",
+        warmupIncluded: true,
       },
       options: workoutOptions,
     });
@@ -588,6 +792,8 @@ const createSelectedRecommendation = async (req, res) => {
       sourceName: "Rule-Based Recommendation Engine",
       sourceUrl: "",
       exercises: selectedWorkout.exercises,
+      warmup: selectedWorkout.warmup || [],
+      reason: selectedWorkout.reason || "",
     });
 
     const workout = await createWorkoutAndExercises({
@@ -604,6 +810,8 @@ const createSelectedRecommendation = async (req, res) => {
       ...recommendation.toObject(),
       workoutId: workout._id,
       exercises: selectedWorkout.exercises,
+      warmup: selectedWorkout.warmup || [],
+      reason: selectedWorkout.reason || "",
     });
   } catch (error) {
     return res.status(500).json({
