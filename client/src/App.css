@@ -1864,3 +1864,11 @@ a {
   }
 }
 
+.card-soft ul {
+  margin-top: 8px;
+}
+
+.card-soft li {
+  line-height: 1.5;
+}
+

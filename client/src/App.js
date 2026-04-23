@@ -254,7 +254,15 @@ function App() {
         method: "POST",
       });
 
-      setRecommendedOptions(Array.isArray(rec?.options) ? rec.options : []);
+      const optionsWithContext = Array.isArray(rec?.options)
+        ? rec.options.map((option) => ({
+            ...option,
+            equipment: option.equipment || profile?.equipment,
+            goal: option.goal || profile?.goal,
+          }))
+        : [];
+
+      setRecommendedOptions(optionsWithContext);
       setPage("dashboard");
     } catch (err) {
       resetRecommendationUi();
@@ -279,7 +287,13 @@ function App() {
         }
       );
 
-      setRecommendedRec(savedRecommendation);
+      const recommendationWithContext = {
+        ...savedRecommendation,
+        equipment: selectedWorkout?.equipment || savedRecommendation?.equipment,
+        goal: selectedWorkout?.goal || savedRecommendation?.goal,
+      };
+
+      setRecommendedRec(recommendationWithContext);
       setRecommendedExercises(
         Array.isArray(savedRecommendation?.exercises)
           ? savedRecommendation.exercises
@@ -341,6 +355,97 @@ function App() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const getWarmupItems = (goal, equipment) => {
+    const normalisedGoal = (goal || "").toLowerCase();
+    const normalisedEquipment = (equipment || "").toLowerCase();
+
+    const baseWarmup = ["3–5 min light cardio", "Leg swings x10 each leg"];
+
+    if (normalisedEquipment === "gym") {
+      if (normalisedGoal === "strength") {
+        return [
+          ...baseWarmup,
+          "Bodyweight squats x10",
+          "1–2 lighter warm-up sets on first machine/barbell exercise",
+        ];
+      }
+
+      if (normalisedGoal === "hypertrophy") {
+        return [
+          ...baseWarmup,
+          "Walking lunges x10 each leg",
+          "Glute bridges x12",
+        ];
+      }
+
+      if (normalisedGoal === "endurance") {
+        return [
+          "5 min treadmill walk or bike",
+          "Bodyweight squats x15",
+          "Step-ups x10 each leg",
+        ];
+      }
+    }
+
+    if (normalisedEquipment === "dumbbells") {
+      if (normalisedGoal === "strength") {
+        return [
+          "3–5 min brisk walk",
+          "Bodyweight squats x10",
+          "Dumbbell Romanian deadlift with light weight x10",
+        ];
+      }
+
+      if (normalisedGoal === "hypertrophy") {
+        return [
+          "3–5 min light cardio",
+          "Goblet squat with light dumbbell x10",
+          "Glute bridges x12",
+        ];
+      }
+
+      if (normalisedGoal === "endurance") {
+        return [
+          "5 min brisk walk",
+          "Air squats x15",
+          "Alternating reverse lunges x10 each leg",
+        ];
+      }
+    }
+
+    if (normalisedEquipment === "bodyweight") {
+      if (normalisedGoal === "strength") {
+        return [
+          "3–5 min marching in place",
+          "Slow tempo squats x10",
+          "Glute bridges x12",
+        ];
+      }
+
+      if (normalisedGoal === "hypertrophy") {
+        return [
+          "3–5 min brisk walk or marching",
+          "Bodyweight lunges x10 each leg",
+          "Glute bridges x15",
+        ];
+      }
+
+      if (normalisedGoal === "endurance") {
+        return [
+          "5 min brisk walk",
+          "Jumping jacks x20",
+          "Air squats x15",
+        ];
+      }
+    }
+
+    return [
+      "3–5 min light cardio",
+      "Bodyweight squats x10",
+      "Leg swings x10 each leg",
+    ];
   };
 
   const latestLog =
@@ -500,7 +605,8 @@ function App() {
             <p className="eyebrow">Smart Recommendation Engine</p>
             <h2>Personalised lower-body workouts with evaluation-driven comparison</h2>
             <p className="hero-text">
-              Generate knowledge-based, profile-aware workout plans with tailored exercise selection and intelligent constraint
+              Generate knowledge-based, profile-aware workout plans with tailored
+              exercise selection, warm-up guidance, and intelligent constraint
               handling. The system adapts to fitness level, goals, equipment, age,
               and injury status to deliver safer, more effective training compared
               to generic online workouts.
@@ -734,85 +840,118 @@ function App() {
 
                   {recommendedOptions.length > 0 && (
                     <div className="personalised-options-grid">
-                      {recommendedOptions.map((option, index) => (
-                        <div
-                          key={`${option.goal || option.template}-${index}`}
-                          className="personalised-option-card"
-                        >
-                          <div className="personalised-option-top">
-                            <div>
-                              <h3>{option.label}</h3>
-                              <p className="option-description">{option.description}</p>
+                      {recommendedOptions.map((option, index) => {
+                        const optionWarmup = getWarmupItems(
+                          option.goal,
+                          option.equipment
+                        );
 
-                              <p
-                                style={{
-                                  fontSize: "13px",
-                                  color: "#64748b",
-                                  marginTop: "6px",
-                                }}
-                              >
-                                {option.reason}
-                              </p>
+                        return (
+                          <div
+                            key={`${option.goal || option.template}-${index}`}
+                            className="personalised-option-card"
+                          >
+                            <div className="personalised-option-top">
+                              <div>
+                                <h3>{option.label}</h3>
+                                <p className="option-description">{option.description}</p>
 
-                              <div
-                                style={{
-                                  marginTop: "10px",
-                                  display: "flex",
-                                  gap: "6px",
-                                  flexWrap: "wrap",
-                                }}
-                              >
-                                {profile?.age >= 50 && (
-                                  <span className="badge badge-warning">
-                                    Age-aware adjustment applied
+                                <p
+                                  style={{
+                                    fontSize: "13px",
+                                    color: "#64748b",
+                                    marginTop: "6px",
+                                  }}
+                                >
+                                  {option.reason}
+                                </p>
+
+                                <div
+                                  style={{
+                                    marginTop: "10px",
+                                    display: "flex",
+                                    gap: "6px",
+                                    flexWrap: "wrap",
+                                  }}
+                                >
+                                  {profile?.age >= 50 && (
+                                    <span className="badge badge-warning">
+                                      Age-aware adjustment applied
+                                    </span>
+                                  )}
+
+                                  {profile?.injury && profile.injury !== "none" && (
+                                    <span className="badge badge-danger">
+                                      Injury-aware filtering applied
+                                    </span>
+                                  )}
+
+                                  <span className="badge badge-light">
+                                    Goal-based structure
                                   </span>
-                                )}
+                                </div>
 
-                                {profile?.injury && profile.injury !== "none" && (
-                                  <span className="badge badge-danger">
-                                    Injury-aware filtering applied
+                                <div className="option-prescription">
+                                  <span className="option-prescription-label">
+                                    Prescription:
                                   </span>
-                                )}
-
-                                <span className="badge badge-light">
-                                  Goal-based structure
-                                </span>
+                                  <span>
+                                    {option.prescription?.sets ?? "-"} sets ×{" "}
+                                    {option.prescription?.reps ?? "-"} reps
+                                  </span>
+                                </div>
                               </div>
 
-                              <div className="option-prescription">
-                                <span className="option-prescription-label">
-                                  Prescription:
-                                </span>
-                                <span>
-                                  {option.prescription?.sets ?? "-"} sets ×{" "}
-                                  {option.prescription?.reps ?? "-"} reps
-                                </span>
-                              </div>
+                              <span className="badge badge-dark">personalised</span>
                             </div>
 
-                            <span className="badge badge-dark">personalised</span>
-                          </div>
+                            <hr className="option-divider" />
 
-                          <hr className="option-divider" />
-
-                          <h4 className="option-exercises-title">Exercises</h4>
-
-                          <ExercisesList exercises={option.exercises} />
-
-                          <div className="option-footer">
-                            <button
-                              type="button"
-                              className="btn btn-primary"
-                              disabled={selectingWorkout}
-                              onClick={() => selectPersonalisedWorkout(option)}
+                            <div
+                              className="card-soft"
+                              style={{ marginBottom: 16, padding: 16 }}
                             >
-                              {selectingWorkout
-                                ? "Selecting..."
-                                : "Select This Workout"}
-                            </button>
+                              <h4 style={{ marginTop: 0, marginBottom: 10 }}>
+                                Warm-Up
+                              </h4>
+                              <p
+                                style={{
+                                  marginTop: 0,
+                                  marginBottom: 10,
+                                  color: "#64748b",
+                                  fontSize: "14px",
+                                }}
+                              >
+                                Goal-aware warm-up based on {option.equipment || "selected"} equipment.
+                              </p>
+                              <ul style={{ margin: 0, paddingLeft: 18 }}>
+                                {optionWarmup.map((item, warmupIndex) => (
+                                  <li key={`${item}-${warmupIndex}`} style={{ marginBottom: 6 }}>
+                                    {item}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+
+                            <h4 className="option-exercises-title">Exercises</h4>
+
+                            <ExercisesList exercises={option.exercises} />
+
+                            <div className="option-footer">
+                              <button
+                                type="button"
+                                className="btn btn-primary"
+                                disabled={selectingWorkout}
+                                onClick={() => selectPersonalisedWorkout(option)}
+                              >
+                                {selectingWorkout
+                                  ? "Selecting..."
+                                  : "Select This Workout"}
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
 
@@ -822,6 +961,33 @@ function App() {
                         <h3 style={{ textTransform: "capitalize", marginTop: 0 }}>
                           {recommendedRec?.workoutType} Lower-Body Workout
                         </h3>
+
+                        <div
+                          className="card-soft"
+                          style={{ marginTop: 16, marginBottom: 16, padding: 16 }}
+                        >
+                          <h4 style={{ marginTop: 0, marginBottom: 10 }}>Warm-Up</h4>
+                          <p
+                            style={{
+                              marginTop: 0,
+                              marginBottom: 10,
+                              color: "#64748b",
+                              fontSize: "14px",
+                            }}
+                          >
+                            Recommended warm-up based on your selected goal and equipment.
+                          </p>
+                          <ul style={{ margin: 0, paddingLeft: 18 }}>
+                            {getWarmupItems(
+                              recommendedRec?.goal,
+                              recommendedRec?.equipment
+                            ).map((item, index) => (
+                              <li key={`${item}-${index}`} style={{ marginBottom: 6 }}>
+                                {item}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
 
                         <ExercisesList exercises={recommendedExercises} />
                       </div>
