@@ -426,6 +426,39 @@ function App() {
     ];
   };
 
+  const getExerciseName = (exercise) => {
+    return exercise?.name || exercise?.exerciseName || "Exercise";
+  };
+
+  const getExerciseSets = (exercise, fallbackSets) => {
+    return exercise?.sets ?? exercise?.prescribedSets ?? fallbackSets ?? "-";
+  };
+
+  const getExerciseReps = (exercise, fallbackReps) => {
+    return exercise?.reps ?? exercise?.prescribedReps ?? fallbackReps ?? "-";
+  };
+
+  const getExerciseRest = (exercise, fallbackRest, goal) => {
+    if (exercise?.restSeconds) return exercise.restSeconds;
+    if (exercise?.rest) return exercise.rest;
+    if (exercise?.prescribedRest) return exercise.prescribedRest;
+    if (fallbackRest) return fallbackRest;
+
+    const normalisedGoal = (goal || "").toLowerCase();
+
+    if (normalisedGoal === "strength") return 120;
+    if (normalisedGoal === "hypertrophy") return 90;
+    if (normalisedGoal === "endurance") return 45;
+
+    return 60;
+  };
+
+  const getGoalLabel = (goal) => {
+    if (!goal) return "Goal-based";
+    if (goal === "hypertrophy") return "Muscle-building";
+    return `${goal.charAt(0).toUpperCase()}${goal.slice(1)} focused`;
+  };
+
   const currentPageTitle =
     page === "dashboard"
       ? "Dashboard"
@@ -779,178 +812,274 @@ function App() {
                     )}
 
                   {recommendedOptions.length > 0 && (
-                    <div className="personalised-options-grid">
-                      {recommendedOptions.map((option, index) => {
-                        const optionProfile =
-                          option.profileSnapshot || generatedProfile || {};
-                        const optionWarmup = getWarmupItems(
-                          option.goal,
-                          option.equipment
-                        );
+                    <div className="pro-options-section">
+                      <div className="pro-options-header">
+                        <div>
+                          <p className="panel-kicker">Choose Your Plan</p>
+                          <h3>Personalised workout options</h3>
+                          <p>
+                            Each card shows the warm-up, main exercises and
+                            recommendation logic in a cleaner product-style
+                            format.
+                          </p>
+                        </div>
+                      </div>
 
-                        return (
-                          <div
-                            key={`${option.goal || option.template}-${index}`}
-                            className="personalised-option-card"
-                          >
-                            <div className="personalised-option-top">
-                              <div>
-                                <h3>{option.label}</h3>
-                                <p className="option-description">
-                                  {option.description}
-                                </p>
+                      <div className="pro-workout-grid">
+                        {recommendedOptions.map((option, index) => {
+                          const optionProfile =
+                            option.profileSnapshot || generatedProfile || {};
+                          const optionWarmup = getWarmupItems(
+                            option.goal,
+                            option.equipment
+                          );
+                          const optionExercises = Array.isArray(option.exercises)
+                            ? option.exercises
+                            : [];
 
-                                {option.reason && (
-                                  <p
-                                    style={{
-                                      fontSize: "13px",
-                                      color: "#64748b",
-                                      marginTop: "6px",
-                                    }}
-                                  >
-                                    {option.reason}
+                          return (
+                            <article
+                              key={`${option.goal || option.template}-${index}`}
+                              className="pro-workout-card"
+                            >
+                              <div className="pro-workout-hero">
+                                <div>
+                                  <span className="pro-plan-number">
+                                    PLAN {String(index + 1).padStart(2, "0")}
+                                  </span>
+
+                                  <h3>{option.label}</h3>
+
+                                  <p>
+                                    {option.description ||
+                                      "A personalised lower-body workout generated from your profile."}
                                   </p>
-                                )}
+                                </div>
 
-                                <div
-                                  style={{
-                                    marginTop: "10px",
-                                    display: "flex",
-                                    gap: "6px",
-                                    flexWrap: "wrap",
-                                  }}
-                                >
+                                <div className="pro-hero-footer">
+                                  <span className="pro-status-pill">
+                                    Personalised
+                                  </span>
+                                  <span className="pro-status-pill muted">
+                                    {getGoalLabel(option.goal)}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className="pro-stats-row">
+                                <div>
+                                  <strong>
+                                    {option.prescription?.sets ?? "-"}
+                                  </strong>
+                                  <span>Sets</span>
+                                </div>
+
+                                <div>
+                                  <strong>
+                                    {option.prescription?.reps ?? "-"}
+                                  </strong>
+                                  <span>Reps</span>
+                                </div>
+
+                                <div>
+                                  <strong>
+                                    {getExerciseRest(
+                                      null,
+                                      option.prescription?.restSeconds,
+                                      option.goal
+                                    )}
+                                  </strong>
+                                  <span>Sec Rest</span>
+                                </div>
+
+                                <div>
+                                  <strong>{optionExercises.length}</strong>
+                                  <span>Exercises</span>
+                                </div>
+                              </div>
+
+                              <div className="pro-reason-box">
+                                <div className="pro-reason-header">
+                                  <span>✓</span>
+                                  <h4>Why this plan?</h4>
+                                </div>
+
+                                <ul className="pro-reason-list">
+                                  <li>
+                                    Matches your {option.goal || "selected"} goal
+                                  </li>
+
+                                  {optionProfile?.injury &&
+                                    optionProfile.injury !== "none" && (
+                                      <li>
+                                        Adjusted for {optionProfile.injury} injury
+                                      </li>
+                                    )}
+
+                                  <li>
+                                    Uses {option.equipment || "available"}{" "}
+                                    equipment
+                                  </li>
+                                  <li>Balanced lower-body structure</li>
+                                </ul>
+
+                                <div className="pro-badge-row">
                                   {Number(optionProfile?.age) >= 50 && (
-                                    <span className="badge badge-warning">
-                                      Age-aware adjustment applied
+                                    <span className="pro-badge warning">
+                                      Age-aware
                                     </span>
                                   )}
 
                                   {optionProfile?.injury &&
                                     optionProfile.injury !== "none" && (
-                                      <span className="badge badge-danger">
-                                        Injury-aware filtering applied
+                                      <span className="pro-badge danger">
+                                        Injury-aware
                                       </span>
                                     )}
 
-                                  <span className="badge badge-light">
-                                    Goal-based structure
+                                  <span className="pro-badge blue">
+                                    Goal-based
                                   </span>
-                                </div>
 
-                                <div className="option-prescription">
-                                  <span className="option-prescription-label">
-                                    Prescription:
-                                  </span>
-                                  <span>
-                                    {option.prescription?.sets ?? "-"} sets ×{" "}
-                                    {option.prescription?.reps ?? "-"} reps
+                                  <span className="pro-badge dark">
+                                    {option.equipment || "Equipment matched"}
                                   </span>
                                 </div>
                               </div>
 
-                              <span className="badge badge-dark">
-                                personalised
-                              </span>
-                            </div>
+                              <div className="pro-section-card">
+                                <div className="pro-section-title">
+                                  <span>01</span>
+                                  <h4>Warm-up</h4>
+                                </div>
 
-                            <hr className="option-divider" />
+                                <div className="pro-list">
+                                  {optionWarmup.map((item, warmupIndex) => (
+                                    <div
+                                      className="pro-list-item"
+                                      key={`${item}-${warmupIndex}`}
+                                    >
+                                      <span className="pro-dot"></span>
+                                      <p>{item}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
 
-                            <div
-                              className="card-soft"
-                              style={{ marginBottom: 16, padding: 16 }}
-                            >
-                              <h4 style={{ marginTop: 0, marginBottom: 10 }}>
-                                Warm-Up
-                              </h4>
-                              <p
-                                style={{
-                                  marginTop: 0,
-                                  marginBottom: 10,
-                                  color: "#64748b",
-                                  fontSize: "14px",
-                                }}
-                              >
-                                Goal-aware warm-up based on{" "}
-                                {option.equipment || "selected"} equipment.
-                              </p>
+                              <div className="pro-section-card">
+                                <div className="pro-section-title">
+                                  <span>02</span>
+                                  <h4>Main workout</h4>
+                                </div>
 
-                              <ul style={{ margin: 0, paddingLeft: 18 }}>
-                                {optionWarmup.map((item, warmupIndex) => (
-                                  <li
-                                    key={`${item}-${warmupIndex}`}
-                                    style={{ marginBottom: 6 }}
-                                  >
-                                    {item}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
+                                <div className="pro-exercise-stack">
+                                  {optionExercises.map((ex, exIndex) => (
+                                    <div
+                                      className="pro-exercise-row"
+                                      key={ex.exerciseId || ex._id || exIndex}
+                                    >
+                                      <div className="pro-exercise-index">
+                                        {String(exIndex + 1).padStart(2, "0")}
+                                      </div>
 
-                            <h4 className="option-exercises-title">
-                              Exercises
-                            </h4>
-                            <ExercisesList exercises={option.exercises} />
+                                      <div className="pro-exercise-main">
+                                        <strong>{getExerciseName(ex)}</strong>
+                                        <span>
+                                          {getExerciseSets(
+                                            ex,
+                                            option.prescription?.sets
+                                          )}{" "}
+                                          sets •{" "}
+                                          {getExerciseReps(
+                                            ex,
+                                            option.prescription?.reps
+                                          )}{" "}
+                                          reps •{" "}
+                                          {getExerciseRest(
+                                            ex,
+                                            option.prescription?.restSeconds,
+                                            option.goal
+                                          )}{" "}
+                                          sec rest
+                                        </span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
 
-                            <div className="option-footer">
                               <button
                                 type="button"
-                                className="btn btn-primary"
+                                className="pro-select-btn"
                                 disabled={selectingWorkout}
-                                onClick={() =>
-                                  selectPersonalisedWorkout(option)
-                                }
+                                onClick={() => selectPersonalisedWorkout(option)}
                               >
                                 {selectingWorkout
                                   ? "Selecting..."
                                   : "Select This Workout"}
                               </button>
-                            </div>
-                          </div>
-                        );
-                      })}
+                            </article>
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
 
                   {recommendedExercises.length > 0 && (
                     <>
-                      <div className="workout-box">
-                        <h3
-                          style={{
-                            textTransform: "capitalize",
-                            marginTop: 0,
-                          }}
-                        >
-                          {recommendedRec?.workoutType} Lower-Body Workout
-                        </h3>
+                      <div className="selected-workout-pro">
+                        <div className="selected-workout-header">
+                          <div>
+                            <p className="panel-kicker">Selected Workout</p>
+                            <h3>
+                              {recommendedRec?.title ||
+                                `${
+                                  recommendedRec?.workoutType || "Personalised"
+                                } Lower-Body Workout`}
+                            </h3>
+                            <p>
+                              This is the saved workout plan selected from your
+                              personalised recommendation options.
+                            </p>
+                          </div>
 
-                        <div
-                          className="card-soft"
-                          style={{
-                            marginTop: 16,
-                            marginBottom: 16,
-                            padding: 16,
-                          }}
-                        >
-                          <h4 style={{ marginTop: 0, marginBottom: 10 }}>
-                            Warm-Up
-                          </h4>
-                          <ul style={{ margin: 0, paddingLeft: 18 }}>
-                            {getWarmupItems(
-                              recommendedRec?.goal,
-                              recommendedRec?.equipment
-                            ).map((item, index) => (
-                              <li
-                                key={`${item}-${index}`}
-                                style={{ marginBottom: 6 }}
-                              >
-                                {item}
-                              </li>
-                            ))}
-                          </ul>
+                          <span className="selected-workout-pill">
+                            Ready to log
+                          </span>
                         </div>
 
-                        <ExercisesList exercises={recommendedExercises} />
+                        <div className="selected-workout-grid">
+                          <div className="pro-section-card">
+                            <div className="pro-section-title">
+                              <span>01</span>
+                              <h4>Warm-up</h4>
+                            </div>
+
+                            <div className="pro-list">
+                              {getWarmupItems(
+                                recommendedRec?.goal,
+                                recommendedRec?.equipment
+                              ).map((item, index) => (
+                                <div
+                                  className="pro-list-item"
+                                  key={`${item}-${index}`}
+                                >
+                                  <span className="pro-dot"></span>
+                                  <p>{item}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="pro-section-card">
+                            <div className="pro-section-title">
+                              <span>02</span>
+                              <h4>Main workout</h4>
+                            </div>
+
+                            <ExercisesList exercises={recommendedExercises} />
+                          </div>
+                        </div>
                       </div>
 
                       <div className="card-soft" style={{ marginTop: 18 }}>
@@ -1117,10 +1246,11 @@ function App() {
 
                 <div className="card-soft" style={{ marginBottom: 18 }}>
                   <div>
-                <b>Current Profile:</b> {profile?.fitnessLevel} | {profile?.equipment}
-                {profile?.age ? ` | age ${profile.age}` : ""}
-                {profile?.injury ? ` | injury ${profile.injury}` : ""}
-                </div>
+                    <b>Current Profile:</b> {profile?.fitnessLevel} |{" "}
+                    {profile?.equipment}
+                    {profile?.age ? ` | age ${profile.age}` : ""}
+                    {profile?.injury ? ` | injury ${profile.injury}` : ""}
+                  </div>
                 </div>
 
                 <ProfileSetup
