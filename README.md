@@ -18,10 +18,13 @@ Test Login:
 
 ## Screenshots
 
-(Add screenshots here before submission)
+### Profile Setup
+![Profile](./screenshots/profile.png)
 
-![Dashboard](./screenshots/dashboard.png)  
-![Workout](./screenshots/workout.png)  
+### Personalised Workout
+![Workout](./screenshots/workout.png)
+
+### Evaluation and Feedback
 ![Evaluation](./screenshots/evaluation.png)
 
 ---
