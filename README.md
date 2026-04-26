@@ -38,7 +38,7 @@ This system addresses that limitation by generating personalised lower-body work
 Each workout is tailored using:
 
 - Fitness level (Beginner, Intermediate, Advanced)
-- Training goal (Strength, Hypertrophy)
+- Training goal (Endurance, Strength, Muscle, )
 - Available equipment (Gym, Dumbbells, Bodyweight)
 - Age considerations
 - Injury constraints (e.g. knee, back)
