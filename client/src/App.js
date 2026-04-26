@@ -593,34 +593,36 @@ function App() {
       </aside>
 
       <main className="main-content">
-        <header className="topbar compact-topbar">
-          <div className="topbar-main">
-            <p className="eyebrow">Knowledge-Based Workout System</p>
-            <h1>{currentPageTitle}</h1>
-            <p className="topbar-description">
-              A knowledge-based lower-body workout recommendation system designed
-              to improve upon generic online workout plans.
-            </p>
+  {page === "dashboard" && (
+    <header className="topbar compact-topbar">
+      <div className="topbar-main">
+        <p className="eyebrow">Knowledge-Based Workout System</p>
+        <h1>{currentPageTitle}</h1>
+        <p className="topbar-description">
+          A knowledge-based lower-body workout recommendation system designed
+          to improve upon generic online workout plans.
+        </p>
 
-            {profile && (
-              <div className="topbar-chips">
-                <span className="topbar-chip">{profile.fitnessLevel}</span>
-                <span className="topbar-chip">{profile.equipment}</span>
-                {profile.age && (
-                  <span className="topbar-chip">Age {profile.age}</span>
-                )}
-                {profile.injury && profile.injury !== "none" && (
-                  <span className="topbar-chip">Injury: {profile.injury}</span>
-                )}
-              </div>
+        {profile && (
+          <div className="topbar-chips">
+            <span className="topbar-chip">{profile.fitnessLevel}</span>
+            <span className="topbar-chip">{profile.equipment}</span>
+            {profile.age && (
+              <span className="topbar-chip">Age {profile.age}</span>
+            )}
+            {profile.injury && profile.injury !== "none" && (
+              <span className="topbar-chip">Injury: {profile.injury}</span>
             )}
           </div>
+        )}
+      </div>
 
-          <div className="topbar-pill">
-            <span className="status-dot"></span>
-            Active
-          </div>
-        </header>
+      <div className="topbar-pill">
+        <span className="status-dot"></span>
+        Active
+      </div>
+    </header>
+  )}
 
         {profileLoading ? (
           <section className="panel">
