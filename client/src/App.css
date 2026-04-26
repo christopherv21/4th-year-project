@@ -3964,6 +3964,57 @@ textarea:focus {
   }
 }
 
+.exercise-library-grouped {
+  display: grid;
+  gap: 34px;
+}
+
+.exercise-category-section {
+  display: grid;
+  gap: 16px;
+}
+
+.exercise-category-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.exercise-category-header h2 {
+  margin: 0;
+  font-size: 1.45rem;
+  letter-spacing: -0.04em;
+  color: var(--text);
+}
+
+.exercise-category-header p {
+  margin: 5px 0 0;
+  color: var(--text-soft);
+}
+
+.section-eyebrow {
+  margin: 0 0 6px !important;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--primary) !important;
+}
+
+.exercise-count {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #2563eb;
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
 
 
 
