@@ -3749,6 +3749,228 @@ textarea:focus {
   }
 }
 
+/* =========================
+   ELITE HERO (CSS ONLY)
+   Uses existing .topbar
+========================= */
+
+.topbar {
+  position: relative;
+  overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  min-height: 200px;
+  padding: 28px 32px;
+
+  border-radius: 28px;
+
+  background:
+    radial-gradient(circle at 85% 20%, rgba(96, 165, 250, 0.45), transparent 32%),
+    radial-gradient(circle at 10% 10%, rgba(37, 99, 235, 0.25), transparent 30%),
+    linear-gradient(135deg, #020617 0%, #0f172a 50%, #1e3a8a 100%);
+
+  color: white;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+}
+
+/* subtle background text */
+.topbar::after {
+  content: "TRAIN SMART";
+  position: absolute;
+  right: -20px;
+  bottom: -25px;
+  font-size: clamp(3rem, 6vw, 6rem);
+  font-weight: 1000;
+  letter-spacing: -0.06em;
+  color: rgba(255, 255, 255, 0.05);
+  pointer-events: none;
+}
+
+/* title */
+.topbar h1 {
+  margin: 6px 0 10px;
+  font-size: clamp(2.4rem, 5vw, 4.2rem);
+  line-height: 0.9;
+  letter-spacing: -0.06em;
+  font-weight: 950;
+  text-transform: uppercase;
+  color: white;
+}
+
+/* description */
+.topbar-description,
+.topbar-summary {
+  margin: 0;
+  max-width: 640px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* small badges row */
+.topbar-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.topbar-chip {
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 850;
+
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* right pill (status/user) */
+.topbar-pill {
+  position: absolute;
+  top: 22px;
+  right: 24px;
+
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+
+  color: white;
+  backdrop-filter: blur(6px);
+}
+
+/* make it compact (important for your feedback earlier) */
+.compact-topbar {
+  padding: 22px 26px;
+  min-height: 170px;
+}
+
+/* mobile */
+@media (max-width: 768px) {
+  .topbar {
+    padding: 22px;
+    min-height: 160px;
+  }
+
+  .topbar h1 {
+    font-size: 2rem;
+  }
+
+  .topbar::after {
+    font-size: 3.5rem;
+  }
+
+  .topbar-pill {
+    position: static;
+    margin-top: 12px;
+  }
+}
+
+/* =========================
+   FINAL CLEAN HERO (NO TITLE)
+========================= */
+
+.topbar {
+  position: relative;
+  overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  min-height: 140px;
+  padding: 22px 26px;
+
+  border-radius: 28px;
+
+  background:
+    radial-gradient(circle at 85% 20%, rgba(96, 165, 250, 0.45), transparent 32%),
+    radial-gradient(circle at 10% 10%, rgba(37, 99, 235, 0.25), transparent 30%),
+    linear-gradient(135deg, #020617 0%, #0f172a 50%, #1e3a8a 100%);
+
+  color: white;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.18);
+}
+
+/* REMOVE background text completely */
+.topbar::after {
+  content: "";
+}
+
+/* REMOVE dashboard title */
+.topbar h1 {
+  display: none;
+}
+
+/* description becomes main focus */
+.topbar-description,
+.topbar-summary {
+  margin: 0;
+  max-width: 640px;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.82);
+  font-weight: 500;
+}
+
+/* chips */
+.topbar-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.topbar-chip {
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 850;
+
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* status pill (top right) */
+.topbar-pill {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+
+  color: white;
+  backdrop-filter: blur(6px);
+}
+
+/* compact spacing */
+.compact-topbar {
+  padding: 20px 24px;
+  min-height: 130px;
+}
+
+/* mobile */
+@media (max-width: 768px) {
+  .topbar {
+    padding: 18px;
+    min-height: 120px;
+  }
+
+  .topbar-pill {
+    position: static;
+    margin-top: 10px;
+  }
+}
+
+
+
+
+
 
 
 

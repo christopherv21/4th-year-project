@@ -596,7 +596,7 @@ function App() {
   {page === "dashboard" && (
     <header className="topbar compact-topbar">
       <div className="topbar-main">
-        <p className="eyebrow">Knowledge-Based Workout System</p>
+        <p className="eyebrow">Recommender system</p>
         <h1>{currentPageTitle}</h1>
         <p className="topbar-description">
           A knowledge-based lower-body workout recommendation system designed
@@ -692,10 +692,7 @@ function App() {
 
                 <section className="panel">
                   <div className="panel-header">
-                    <div>
-                      <p className="panel-kicker">Workout Generation</p>
-                      <h3>Personalised Workout Options</h3>
-                    </div>
+                    
                   </div>
 
                   <div className="comparison-card compact-comparison-card">
