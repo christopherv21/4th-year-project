@@ -3869,9 +3869,6 @@ textarea:focus {
   }
 }
 
-/* =========================
-   FINAL CLEAN HERO (NO TITLE)
-========================= */
 
 .topbar {
   position: relative;
@@ -3895,12 +3892,12 @@ textarea:focus {
   box-shadow: 0 20px 50px rgba(15, 23, 42, 0.18);
 }
 
-/* REMOVE background text completely */
+
 .topbar::after {
   content: "";
 }
 
-/* REMOVE dashboard title */
+
 .topbar h1 {
   display: none;
 }
